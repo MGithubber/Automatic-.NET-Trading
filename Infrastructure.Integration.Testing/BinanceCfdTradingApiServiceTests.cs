@@ -16,12 +16,9 @@ public class BinanceCfdTradingApiServiceTests
 
     [OneTimeSetUp]
     public void OneTimeSetUp() => this.SUT = new BinanceCfdTradingApiService(this.CurrencyPair, this.BinanceApiCredentials);
-    
+
     [SetUp]
-    public void SetUp()
-    {
-        Assume.That(this.StopTests, Is.False);
-    }
+    public void SetUp() => Assume.That(this.StopTests, Is.False);
 
     //// //// ////
 
@@ -110,10 +107,7 @@ public class BinanceCfdTradingApiServiceTests
 
     [OneTimeTearDown]
     public void OneTimeTearDown() { }
-
+    
     [TearDown]
-    public void TearDown()
-    {
-        this.StopTests = TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Passed;
-    }
+    public void TearDown() => this.StopTests = TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Passed;
 }

@@ -20,7 +20,7 @@ public class CsvTVCandlestickTradingviewStyleMap : ClassMap<TVCandlestick>
 {
     private static DateTime ParseDateTime(ConvertFromStringArgs args)
     {
-        string string_to_parse = args.Row.GetField("time");
+        string string_to_parse = args.Row.GetField("time")!;
 
         if (long.TryParse(string_to_parse, out long seconds_from_epoch))
             return new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(seconds_from_epoch);
@@ -35,17 +35,17 @@ public class CsvTVCandlestickTradingviewStyleMap : ClassMap<TVCandlestick>
     {
         this.Map(candlestick => candlestick.Date).Name("time").Convert(args => ParseDateTime(args));
 
-        this.Map(candlestick => candlestick.Open).Name("open").Convert(args => decimal.Parse(args.Row.GetField("open"), CultureInfo.InvariantCulture));
-        this.Map(candlestick => candlestick.Close).Name("close").Convert(args => decimal.Parse(args.Row.GetField("close"), CultureInfo.InvariantCulture));
-        this.Map(candlestick => candlestick.High).Name("high").Convert(args => decimal.Parse(args.Row.GetField("high"), CultureInfo.InvariantCulture));
-        this.Map(candlestick => candlestick.Low).Name("low").Convert(args => decimal.Parse(args.Row.GetField("low"), CultureInfo.InvariantCulture));
+        this.Map(candlestick => candlestick.Open).Name("open").Convert(args => decimal.Parse(args.Row.GetField("open")!, CultureInfo.InvariantCulture));
+        this.Map(candlestick => candlestick.Close).Name("close").Convert(args => decimal.Parse(args.Row.GetField("close")!, CultureInfo.InvariantCulture));
+        this.Map(candlestick => candlestick.High).Name("high").Convert(args => decimal.Parse(args.Row.GetField("high")!, CultureInfo.InvariantCulture));
+        this.Map(candlestick => candlestick.Low).Name("low").Convert(args => decimal.Parse(args.Row.GetField("low")!, CultureInfo.InvariantCulture));
 
         this.Map(candlestick => candlestick.Buy).Name("Buy");
         this.Map(candlestick => candlestick.StrongBuy).Name("Strong Buy");
         this.Map(candlestick => candlestick.Sell).Name("Sell");
         this.Map(candlestick => candlestick.StrongSell).Name("Strong Sell");
-        this.Map(candlestick => candlestick.ExitBuy).Name("Exit Buy").Convert(args => double.Parse(args.Row.GetField("Exit Buy").Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture));
-        this.Map(candlestick => candlestick.ExitSell).Name("Exit Sell").Convert(args => double.Parse(args.Row.GetField("Exit Sell").Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture));
+        this.Map(candlestick => candlestick.ExitBuy).Name("Exit Buy").Convert(args => double.Parse(args.Row.GetField("Exit Buy")!.Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture));
+        this.Map(candlestick => candlestick.ExitSell).Name("Exit Sell").Convert(args => double.Parse(args.Row.GetField("Exit Sell")!.Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture));
         
         //// //// ////
 
