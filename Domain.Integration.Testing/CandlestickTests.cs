@@ -1,4 +1,6 @@
-using System.Reflection;
+﻿using System.Globalization;
+
+using CsvHelper;
 
 using Skender.Stock.Indicators;
 
@@ -11,11 +13,32 @@ public class CandlestickTests
     private Quote[] Quotes { get; set; }
     private Candlestick[] Candlesticks { get; set; }
 
-    [SetUp]
-    public void Setup()
-    {
-        Random random = new Random();
 
+    #region private methods
+    private static Candlestick[] QuoteArray_to_CandlestickArray(Quote[] Quotes)
+    {
+        Candlestick[] Candlesticks = new Candlestick[Quotes.Length];
+        for (int i = 0; i < Candlesticks.Length; i++)
+            Candlesticks[i] = new Candlestick
+            {
+                Date = Quotes[i].Date,
+                Open = Quotes[i].Open,
+                High = Quotes[i].High,
+                Low = Quotes[i].Low,
+                Close = Quotes[i].Close
+            };
+        
+        return Candlesticks;
+    }
+    #endregion
+
+
+    #region Tests
+    [Test, Order(1)]
+    public void GetParabolicSar_RandomValuesChart_Returns_Same_Results()
+    {
+        // Arrange
+        Random random = new Random();
         this.Quotes = Enumerable.Range(0, this.length).Select(_ => new Quote
         {
             Date = DateTime.MinValue,
@@ -24,28 +47,32 @@ public class CandlestickTests
             Low = random.Next(800, 1200) + (decimal)Math.Round(random.NextDouble(), 4),
             Close = random.Next(800, 1200) + (decimal)Math.Round(random.NextDouble(), 4)
         }).ToArray();
+        this.Candlesticks = CandlestickTests.QuoteArray_to_CandlestickArray(this.Quotes);
 
-        this.Candlesticks = new Candlestick[this.length];
-        for (int i = 0; i < this.length; i++)
-            this.Candlesticks[i] = new Candlestick
-            {
-                Date = this.Quotes[i].Date,
-                Open = this.Quotes[i].Open,
-                High = this.Quotes[i].High,
-                Low = this.Quotes[i].Low,
-                Close = this.Quotes[i].Close
-            };
-    }
-
-    [Test, Order(1)]
-    public void GetParabolicSar_Returns_Same_Results()
-    {
-        // Arrange
         // Act
         List<ParabolicSarResult> PsarResult_Quotes = this.Quotes.GetParabolicSar<Quote>().ToList();
         List<ParabolicSarResult> PsarResult_Candlesticks = this.Candlesticks.GetParabolicSar<Candlestick>().ToList();
-        
+
         // Assert
         PsarResult_Quotes.Should().NotBeEmpty().And.BeEquivalentTo(PsarResult_Candlesticks);
     }
+
+    [Test, Order(2)]
+    public void GetParabolicSar_RealValuesChart_Returns_Same_Results()
+    {
+        // Arrange
+        StreamReader reader = new StreamReader(@"..\Process files\Candlestick charts\BINANCE_ETHBUSD, 15.csv");
+        CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        csv.Context.RegisterClassMap<CsvQuoteTradingviewStyleMap>();
+        this.Quotes = csv.GetRecords<Quote>().ToArray();
+        this.Candlesticks = CandlestickTests.QuoteArray_to_CandlestickArray(this.Quotes);
+
+        // Act
+        List<ParabolicSarResult> PsarResult_Quotes = this.Quotes.GetParabolicSar<Quote>().ToList();
+        List<ParabolicSarResult> PsarResult_Candlesticks = this.Candlesticks.GetParabolicSar<Candlestick>().ToList();
+
+        // Assert
+        PsarResult_Quotes.Should().NotBeEmpty().And.BeEquivalentTo(PsarResult_Candlesticks);
+    } 
+    #endregion
 }
