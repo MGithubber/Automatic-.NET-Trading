@@ -93,6 +93,41 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
         catch { throw; }
         finally { this.Connection?.Close(); }
     }
+    public void AddFuturesOrder(BinanceFuturesOrder futuresOrder, int Candlestick_Identity, out int FuturesOrder_Identity)
+    {
+        try
+        {
+            this.Connection = this.ConnectionFactory.CreateConnection();
+
+            using SqlCommand command = new SqlCommand("spAddFuturesOrder", this.Connection);
+            command.CommandType = CommandType.StoredProcedure;
+
+            #region SqlCommand parameters
+            command.Parameters.AddWithValue("@CandlestickID", Candlestick_Identity);
+            command.Parameters.AddWithValue("@Symbol", futuresOrder.Symbol);
+            command.Parameters.AddWithValue("@BinanceID", futuresOrder.Id);
+            command.Parameters.AddWithValue("@CreateTime", futuresOrder.CreateTime);
+            command.Parameters.AddWithValue("@OrderSide", futuresOrder.Side.ToString());
+            command.Parameters.AddWithValue("@OrderType", futuresOrder.Type.ToString());
+            command.Parameters.AddWithValue("@Price", futuresOrder.Price);
+            command.Parameters.AddWithValue("@Quantity", futuresOrder.Quantity);
+            command.Parameters.Add(new SqlParameter
+            {
+                ParameterName = "@ScopeIdentity",
+                SqlDbType = SqlDbType.Int,
+                Direction = ParameterDirection.Output,
+            });
+            #endregion
+            
+            command.ExecuteNonQuery();
+            
+            this.Connection.Close();
+            
+            FuturesOrder_Identity = (int)command.Parameters["@ScopeIdentity"].Value;
+        }
+        catch { throw; }
+        finally { this.Connection?.Close(); }
+    }
     public void AddFuturesOrder(BinanceFuturesOrder futuresOrder, TVCandlestick candlestick, out int FuturesOrder_Identity, out int Candlestick_Identity)
     {
         try
