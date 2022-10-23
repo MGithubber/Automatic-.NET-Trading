@@ -48,8 +48,8 @@ public class TradingDataDbServiceTests
     /// <summary>
     /// Contains all the IDs that are part of this test and must be deleted after the test is finished
     /// </summary>
-    // private readonly List<int?> CleanupList = new List<int?>();
-
+    private readonly List<int?> CleanupList = new List<int?>();
+    
     #region Tests
     [Test, Order(1)]
     public void CreatingAndClosingConnection_Work()
