@@ -18,9 +18,8 @@ namespace Infrastructure.Integration.Testing;
 [TestFixture]
 public class TradingDataDbServiceTests
 {
-    private const string ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=\"Binance trading logs\";Integrated Security=True;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+    private const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False";
     private const string DatabaseName = "Binance trading logs";
-    private IDatabaseConnectionFactory<SqlConnection> smallSUT = new SqlDatabaseConnectionFactory(ConnectionString, DatabaseName);
     private ITradingDataDbService<TVCandlestick> SUT = new TradingDataDbService(ConnectionString, DatabaseName);
     
 
@@ -30,8 +29,8 @@ public class TradingDataDbServiceTests
     {
         // Arrange
         SqlConnection connection = default!;
-        Action createConnection = new Action(() => connection = this.smallSUT.CreateConnection());
-
+        Action createConnection = new Action(() => connection = new SqlDatabaseConnectionFactory(ConnectionString, DatabaseName).CreateConnection());
+        
         
         // Act
         // Assert
