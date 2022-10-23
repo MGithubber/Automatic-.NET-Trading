@@ -10,8 +10,12 @@ using AutomaticDotNETtrading.Application.Interfaces;
 using AutomaticDotNETtrading.Application.Interfaces.Data;
 using AutomaticDotNETtrading.Application.Interfaces.Services;
 using AutomaticDotNETtrading.Application.Interfaces.Services.Internal;
+using AutomaticDotNETtrading.Domain.Models;
+
 using Binance.Net.Enums;
 using Binance.Net.Objects.Models.Futures;
+using Binance.Net.Objects.Models.Spot;
+
 using CryptoExchange.Net.Objects;
 
 using Skender.Stock.Indicators;
@@ -23,7 +27,6 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
     private readonly IChartDataService<TCandlestick> ChartDataService = default!;
     private readonly ITradingDataDbService<TCandlestick> TradingDataDbService = default!;
     private readonly List<ITradingStrategy<TCandlestick>>? Traders = null;
-
 
     public MPoolTradingService(IChartDataService<TCandlestick> chartDataService, ITradingDataDbService<TCandlestick> tradingDataDbService, params ITradingStrategy<TCandlestick>[] traders)
     {
@@ -41,57 +44,50 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
         #endregion
 
         //// ////
+        
+        this.OnNewCandlestickRegistered += MPoolTradingService_OnNewCandlestickRegistered;
+        void MPoolTradingService_OnNewCandlestickRegistered(object? sender, TCandlestick e)
+        {
+            throw new NotImplementedException();
+            // // TO DO save log in database // //
+            // // TO DO save candlestick in database // //
+        }
 
         this.Traders.ForEach(trader =>
         {
             trader.OnPositionOpened += Trader_OnPositionOpened;
-            trader.OnStopLossUpdated += Trader_OnStopLossUpdated;
-            trader.OnStopOutDetected += Trader_OnStopOutDetected;
             trader.OnPositionClosed += Trader_OnPositionClosed;
         });
-
-        void Trader_OnPositionOpened(object? sender, KeyValuePair<TCandlestick, IEnumerable<BinanceFuturesPlacedOrder>> e)
+        void Trader_OnPositionOpened(object? sender, KeyValuePair<TCandlestick, FuturesPosition> e)
         {
             throw new NotImplementedException();
-            // this.OnAnyTraderPositionOpened?.Invoke(sender, e);
-        }
-        void Trader_OnStopLossUpdated(object? sender, KeyValuePair<TCandlestick, BinanceFuturesPlacedOrder> e)
-        {
-            throw new NotImplementedException();
-            // this.OnAnyTraderStopLossUpdated?.Invoke(sender, e);
-        }
-        void Trader_OnStopOutDetected(object? sender, TCandlestick e)
-        {
-            throw new NotImplementedException();
-            // this.OnAnyTraderStopOutDetected?.Invoke(sender, e);
+            // // TO DO save log in database // //
         }
         void Trader_OnPositionClosed(object? sender, KeyValuePair<TCandlestick, BinanceFuturesPlacedOrder> e)
         {
             throw new NotImplementedException();
-            // this.OnAnyTraderPositionClosed?.Invoke(sender, e);
+            // // TO DO save log in database // //
         }
     }
 
-    //// //// //// ////
-
-    #region Public events
-    public event EventHandler<TCandlestick>? OnNewCandlestickRegistered;
-    #endregion
-
     //// //// ////
+
+    public event EventHandler<TCandlestick>? OnNewCandlestickRegistered;
+
+    //// ////
 
     private TCandlestick[] CompletedCandlesticks = default!;
     private decimal LastOpenPrice;
-
-
+        
     public async Task StartTradingAsync()
     {
         if (this.Traders is null)
-            return;
+            throw new InvalidOperationException($"Attempted to start trading with the when {nameof(this.Traders)} was NULL", new NullReferenceException($"{nameof(this.Traders)} was NULL"));
 
-
+        // //
+        
         await this.ChartDataService.RegisterAllCandlesticksAsync();
-
+        
         while (true)
         {
             await this.ChartDataService.WaitForNextCandleAsync();
@@ -100,14 +96,15 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
 
 
             this.OnNewCandlestickRegistered?.Invoke(this.ChartDataService, this.CompletedCandlesticks.Last());
-
+            
             this.Traders.ForEach(trader => trader.SendData((TCandlestick[])this.CompletedCandlesticks.Clone(), this.LastOpenPrice));
             try { Parallel.Invoke(this.Traders.Select(trader => new Action(trader.MakeMove)).ToArray()); }
-            catch (Exception exception) { Console.WriteLine($"==============================\n\nEXCEPTION AT Parallel.Invoke(traders)\n\n{exception}\n\n=============================="); }
+            catch (Exception exception) { /*TO DO exception handling*/ }
+            // previously in catch: Console.WriteLine($"==============================\n\nEXCEPTION AT Parallel.Invoke(traders)\n\n{exception}\n\n==============================");
         }
     }
     
-    //// //// ////
+    //// ////
 
     public void QuitChartDataService() => this.ChartDataService.Quit();
 }

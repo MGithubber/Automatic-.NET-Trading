@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using AutomaticDotNETtrading.Application.Interfaces;
 using AutomaticDotNETtrading.Application.Interfaces.Services;
+using AutomaticDotNETtrading.Domain.Models;
 using AutomaticDotNETtrading.Infrastructure.Enums;
 using AutomaticDotNETtrading.Infrastructure.Models;
 using AutomaticDotNETtrading.Infrastructure.Services;
@@ -30,13 +31,13 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandles
     //// //// //// ////
 
     #region Events
-    public event EventHandler<KeyValuePair<TVCandlestick, IEnumerable<BinanceFuturesPlacedOrder>>>? OnPositionOpened;
+    public event EventHandler<KeyValuePair<TVCandlestick, FuturesPosition>>? OnPositionOpened;
     public event EventHandler<KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder>>? OnStopLossUpdated;
     public event EventHandler<TVCandlestick>? OnStopOutDetected;
     public event EventHandler<KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder>>? OnPositionClosed;
     public event EventHandler<Dictionary<TVCandlestick, decimal>>? OnParabolicSARdivergence;
 
-    protected void OnPositionOpened_Invoke(object sender, KeyValuePair<TVCandlestick, IEnumerable<BinanceFuturesPlacedOrder>> e) => this.OnPositionOpened?.Invoke(sender, e);
+    protected void OnPositionOpened_Invoke(object sender, KeyValuePair<TVCandlestick, FuturesPosition> e) => this.OnPositionOpened?.Invoke(sender, e);
     protected void OnStopLossUpdated_Invoke(object sender, KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder> e) => this.OnStopLossUpdated?.Invoke(sender, e);
     protected void OnStopOutDetected_Invoke(object sender, TVCandlestick e) => this.OnStopOutDetected?.Invoke(sender, e);
     protected void OnPositionClosed_Invoke(object sender, KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder> e) => this.OnPositionClosed?.Invoke(sender, e);
@@ -75,10 +76,10 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandles
     {
         CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>> CallResult = await this.ContractTrader.OpenPositionAtMarketPriceAsync(OrderSide, decimal.MaxValue, StopLoss_price, TakeProfit_price);
 
-        if (!CallResult.Success)
-            throw new Exception($"Failed to open a futures order position on {nameof(OrderSide)} {OrderSide}");
+        if (this.ContractTrader.Position is null)
+            throw new Exception($"Failed to open a futures order position on {nameof(OrderSide)} {OrderSide}", new NullReferenceException(nameof(this.ContractTrader.Position)));
 
-        this.OnPositionOpened_Invoke(this, new KeyValuePair<TVCandlestick, IEnumerable<BinanceFuturesPlacedOrder>>(this.LastCandle, CallResult.Data.Select(orderCall => orderCall.Data)));
+        this.OnPositionOpened_Invoke(this, new KeyValuePair<TVCandlestick, FuturesPosition>(this.LastCandle, this.ContractTrader.Position));
     }
     protected async Task CloseFuturesPosition()
     {

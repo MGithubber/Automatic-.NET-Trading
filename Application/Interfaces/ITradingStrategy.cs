@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutomaticDotNETtrading.Application.Interfaces.Services;
-using Binance.Net.Objects.Models.Futures;
+using AutomaticDotNETtrading.Domain.Models;
 
-using CryptoExchange.Net.Objects;
+using Binance.Net.Objects.Models.Futures;
 
 using Skender.Stock.Indicators;
 
@@ -16,9 +16,7 @@ public interface ITradingStrategy<TCandlestick> where TCandlestick : IQuote
 {
     public ICfdTradingApiService ContractTrader { get; }
     
-    public event EventHandler<KeyValuePair<TCandlestick, IEnumerable<BinanceFuturesPlacedOrder>>> OnPositionOpened;
-    public event EventHandler<KeyValuePair<TCandlestick, BinanceFuturesPlacedOrder>> OnStopLossUpdated;
-    public event EventHandler<TCandlestick> OnStopOutDetected;
+    public event EventHandler<KeyValuePair<TCandlestick, FuturesPosition>> OnPositionOpened;
     public event EventHandler<KeyValuePair<TCandlestick, BinanceFuturesPlacedOrder>> OnPositionClosed;
     
     public void SendData(TCandlestick[] Candlesticks, decimal LastOpenPrice);

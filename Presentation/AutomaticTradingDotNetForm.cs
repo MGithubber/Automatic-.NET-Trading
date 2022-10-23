@@ -20,15 +20,16 @@ namespace Presentation;
 
 public partial class AutomaticTradingDotNetForm : Form
 {
-    public AutomaticTradingDotNetForm() => InitializeComponent();
+    public AutomaticTradingDotNetForm() => this.InitializeComponent();
 
     private void AutomaticTradingDotNetForm_Load(object sender, EventArgs e) { }
     
     
     //// //// //// //// //// //// //// ////
     
-
+    
     private readonly object EventsPadLock = new object();
+    private MPoolTradingService<TVCandlestick, SqlConnection>? MPoolTradingService;
     private async Task StartPoolTradingAsync()
     {
         static TradingviewChartDataService Create_TradingviewDataExtractor()
@@ -87,16 +88,16 @@ public partial class AutomaticTradingDotNetForm : Form
             LuxAlgoPsar.OnPositionClosed += LuxAlgoPsar_OnPositionClosed;
         });
         #region LuxAlgoAndPsarTradingStrategy events
-        void LuxAlgoPsar_OnPositionOpened(object? sender, KeyValuePair<TVCandlestick, IEnumerable<BinanceFuturesPlacedOrder>> e)
+        void LuxAlgoPsar_OnPositionOpened(object? sender, KeyValuePair<TVCandlestick, FuturesPosition> e)
         {
             lock (this.EventsPadLock)
             {
                 Task.Run(() =>
                 {
                     _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
-
-                    BinanceFuturesPlacedOrder EntryOrder = e.Value.First();
-                    BinanceFuturesPlacedOrder StopLossOrder = e.Value.ElementAt(1);
+                    
+                    BinanceFuturesOrder EntryOrder = e.Value.EntryOrder;
+                    BinanceFuturesOrder? StopLossOrder = e.Value.StopLossOrder;
                     string SymbolName = EntryOrder.Symbol;
                     string Side = EntryOrder.Side.ToString().ToUpper();
 
@@ -104,7 +105,7 @@ public partial class AutomaticTradingDotNetForm : Form
                     builder.AppendLine($"====  ====  ====  ====");
                     builder.AppendLine($"{sender.GetType().Name}: POSITION OPENED on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
                     builder.AppendLine($"{Side} order placed on {SymbolName}");
-                    builder.AppendLine($"entry price == ${EntryOrder.AveragePrice}");
+                    builder.AppendLine($"entry price == ${EntryOrder.AvgPrice}");
                     builder.AppendLine($"quantity == {EntryOrder.Quantity}");
                     builder.AppendLine($"stop loss price == ${StopLossOrder.StopPrice}");
                     builder.AppendLine($"====  ====  ====  ====");
@@ -178,35 +179,27 @@ public partial class AutomaticTradingDotNetForm : Form
         
         //// ////
 
-        MPoolTradingService<TVCandlestick, SqlConnection> MPoolTradingService = new(TradingviewChartDataService, TradingDataDbService, LuxAlgoPsarMethodsList.ToArray());
-        MPoolTradingService.OnNewCandlestickRegistered += new EventHandler<TVCandlestick>((sender, e) =>
+        this.MPoolTradingService = new(TradingviewChartDataService, TradingDataDbService, LuxAlgoPsarMethodsList.ToArray());
+        this.MPoolTradingService.OnNewCandlestickRegistered += new EventHandler<TVCandlestick>((sender, e) =>
         {
-            if (sender is null)
-                throw new NullReferenceException($"An event was invoked but the {nameof(sender)} was NULL");
-
             Task.Run(() =>
             {
+                _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
                 string newcandlestring = $"{sender.GetType().Name} registered candlestick at date {e.Date:dd/MM/yyyy HH:mm}, {nameof(e.LuxAlgoSignal)}=={e.LuxAlgoSignal}";
             });
         });
         
-        try { await MPoolTradingService.StartTradingAsync(); }
+        try { await this.MPoolTradingService.StartTradingAsync(); }
         catch { throw; }
-        finally { MPoolTradingService.QuitChartDataService(); }
+        finally { this.MPoolTradingService.QuitChartDataService(); }
     }
 
     private Task? PoolTradingTask = null;
-    private void StartButton_Click(object sender, EventArgs e)
-    {
-        this.PoolTradingTask ??= this.StartPoolTradingAsync();
-    }
+    private void StartButton_Click(object sender, EventArgs e) => this.PoolTradingTask ??= this.StartPoolTradingAsync();
 
 
     //// //// //// //// ////
 
-
-    protected override void OnFormClosed(FormClosedEventArgs e)
-    {
-        base.OnFormClosed(e);
-    }
+    
+    protected override void OnFormClosed(FormClosedEventArgs e) => this.MPoolTradingService?.QuitChartDataService();
 }
