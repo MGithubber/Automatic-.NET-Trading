@@ -13,11 +13,12 @@
 	@High DECIMAL(18, 4),
 	@Low DECIMAL(18, 4),
 	@Close DECIMAL(18, 4),
+	@LuxAlgoSignal VARCHAR(16) = NULL,
 	
 	@Candlestick_Identity INT OUTPUT,
 	@FuturesOrder_Identity INT OUTPUT
 AS
 BEGIN
-	EXEC @Candlestick_Identity = [spAddCandlestickIfNotExists] @CurrencyPair, @DateTime, @Open, @High, @Low, @Close
+	EXEC @Candlestick_Identity = [spAddCandlestickIfNotExists] @CurrencyPair, @DateTime, @Open, @High, @Low, @Close, @LuxAlgoSignal
 	EXEC @FuturesOrder_Identity = [spAddFuturesOrderIfNotExists] @Candlestick_Identity, @CurrencyPair, @BinanceID, @CreateTime, @OrderSide, @OrderType, @Price, @Quantity
 END

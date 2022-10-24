@@ -73,7 +73,4 @@
   <ItemGroup>
     <None Include="dbo\Publish locations\Local Binance trading logs.publish.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <RefactorLog Include="Trading Data Logs.refactorlog" />
-  </ItemGroup>
 </Project>

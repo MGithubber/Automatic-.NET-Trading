@@ -13,6 +13,7 @@ using System.Data;
 using Binance.Net.Objects.Models.Futures;
 using Binance.Net.Enums;
 using Bogus;
+using AutomaticDotNETtrading.Infrastructure.Enums;
 
 namespace Infrastructure.Integration.Testing;
 
@@ -32,8 +33,20 @@ public class TradingDataDbServiceTests
         .RuleFor(c => c.Open, f => f.Random.Decimal(1000, 3000))
         .RuleFor(c => c.High, f => f.Random.Decimal(1000, 3000))
         .RuleFor(c => c.Low, f => f.Random.Decimal(1000, 3000))
-        .RuleFor(c => c.Close, f => f.Random.Decimal(1000, 3000));
-    
+        .RuleFor(c => c.Close, f => f.Random.Decimal(1000, 3000))
+        .Rules((f, c) =>
+        {
+            switch (f.PickRandom<LuxAlgoSignal>())
+            {
+                case LuxAlgoSignal.Buy: c.Buy = true; break;
+                case LuxAlgoSignal.StrongBuy: c.StrongBuy = true; break;
+                case LuxAlgoSignal.Sell: c.Sell = true; break;
+                case LuxAlgoSignal.StrongSell: c.StrongSell = true; break;
+                case LuxAlgoSignal.ExitBuy: c.ExitBuy = f.Random.Double(950, 3050); break;
+                case LuxAlgoSignal.ExitSell: c.ExitSell = f.Random.Double(950, 3050); break;
+            }
+        });
+
     private readonly Faker<BinanceFuturesOrder> BinanceFuturesOrdersFaker = new Faker<BinanceFuturesOrder>()
         .RuleFor(order => order.Symbol, f => f.Finance.Currency().Code)
         .RuleFor(order => order.Id, f => f.Random.Long(0, long.MaxValue))

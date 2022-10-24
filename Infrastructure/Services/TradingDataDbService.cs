@@ -27,7 +27,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
 
     //// //// ////
     
-    public int AddCandlestick(TVCandlestick candlestick)
+    public int AddCandlestick(TVCandlestick Candlestick)
     {
         try
         {
@@ -40,12 +40,13 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
             };
 
             #region SqlCommand parameters
-            command.Parameters.AddWithValue("@CurrencyPair", candlestick.CurrencyPair.Name);
-            command.Parameters.AddWithValue("@DateTime", candlestick.Date);
-            command.Parameters.AddWithValue("@Open", candlestick.Open);
-            command.Parameters.AddWithValue("@Close", candlestick.Close);
-            command.Parameters.AddWithValue("@High", candlestick.High);
-            command.Parameters.AddWithValue("@Low", candlestick.Low);
+            command.Parameters.AddWithValue("@CurrencyPair", Candlestick.CurrencyPair.Name);
+            command.Parameters.AddWithValue("@DateTime", Candlestick.Date);
+            command.Parameters.AddWithValue("@Open", Candlestick.Open);
+            command.Parameters.AddWithValue("@Close", Candlestick.Close);
+            command.Parameters.AddWithValue("@High", Candlestick.High);
+            command.Parameters.AddWithValue("@Low", Candlestick.Low);
+            command.Parameters.AddWithValue("@LuxAlgoSignal", Candlestick.LuxAlgoSignal.ToString());
             command.Parameters.Add(new SqlParameter
             {
                 ParameterName = "@ScopeIdentity",
@@ -60,7 +61,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
             
             if (rows < 1)
             {
-                throw new ArgumentException($"A candlestick with {nameof(CurrencyPair)} == \"{candlestick.CurrencyPair.Name}\" and {nameof(candlestick.Date)} == \"{candlestick.Date}\" is already in the database", nameof(candlestick));
+                throw new ArgumentException($"A candlestick with {nameof(CurrencyPair)} == \"{Candlestick.CurrencyPair.Name}\" and {nameof(Candlestick.Date)} == \"{Candlestick.Date}\" is already in the database", nameof(Candlestick));
             }
 
             
@@ -97,6 +98,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
             command.Parameters.AddWithValue("@Close", Candlestick.Close);
             command.Parameters.AddWithValue("@High", Candlestick.High);
             command.Parameters.AddWithValue("@Low", Candlestick.Low);
+            command.Parameters.AddWithValue("@LuxAlgoSignal", Candlestick.LuxAlgoSignal.ToString());
 
             command.Parameters.Add(new SqlParameter
             {

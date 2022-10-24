@@ -17,9 +17,9 @@ public interface ITradingDataDbService<TCandlestick> where TCandlestick : IQuote
     /// <summary>
     /// Adds a <see cref="TCandlestick"/> synchronously to the database then returns its database identity
     /// </summary>
-    /// <param name="candlestick"></param>
+    /// <param name="Candlestick"></param>
     /// <returns></returns>
-    public int AddCandlestick(TCandlestick candlestick);
+    public int AddCandlestick(TCandlestick Candlestick);
 
     /// <summary>
     /// Adds a <see cref="BinanceFuturesOrder"/> along with its corresponding <see cref="TCandlestick"/> synchronously to the database then returns their database identities
