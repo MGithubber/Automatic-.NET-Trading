@@ -45,10 +45,8 @@ public class TradingDataDbServiceTests
     #endregion
 
     
-    /// <summary>
-    /// Contains all the IDs that are part of this test and must be deleted after the test is finished
-    /// </summary>
-    private readonly List<int?> CleanupList = new List<int?>();
+    // Objects to delete from the database
+    private readonly List<object> CleanupList = new List<object>();
     
     #region Tests
     [Test, Order(1)]
@@ -71,49 +69,48 @@ public class TradingDataDbServiceTests
     [Test, Order(2)]
     public void AddingCandlestick_Works()
     {
-        int DbScopeIdentity = this.SUT.AddCandlestick(this.CandlesticksFaker.Generate());
-        DbScopeIdentity.Should().BeGreaterThan(0);
-    }
-
-    [Test, Order(3)]
-    public void AddingFuturesOrder_Works()
-    {
-        int DbScopeIdentity = this.SUT.AddFuturesOrder(this.BinanceFuturesOrdersFaker.Generate());
-        DbScopeIdentity.Should().BeGreaterThan(0);
-    }
-
-    [Test, Order(3)]
-    public void AddingFuturesOrderAndCandlestick_Works()
-    {
         // Arrange
-        TVCandlestick candlestick = this.CandlesticksFaker.Generate();
-        BinanceFuturesOrder order = this.BinanceFuturesOrdersFaker.Generate();
-        
+        TVCandlestick FakeCandlestick = this.CandlesticksFaker.Generate();
+
         // Act
-        this.SUT.AddFuturesOrder(order, candlestick, out int FuturesOrder_Identity, out int Candlestick_Identity);
+        int DbScopeIdentity = this.SUT.AddCandlestick(FakeCandlestick);
+        this.CleanupList.Add(FakeCandlestick);
 
         // Assert
-        FuturesOrder_Identity.Should().BeGreaterThan(0);
-        Candlestick_Identity.Should().BeGreaterThan(0);
+        DbScopeIdentity.Should().BeGreaterThan(0);
+        new Action(() => this.SUT.AddCandlestick(FakeCandlestick)).Should().ThrowExactly<ArgumentException>("because the candlestick is already in the database");
     }
-
+    
     [Test, Order(4)]
-    public void Add_Multiple_FuturesOrders_for_same_Candlestick()
+    public void AddingFuturesOrders_Works()
     {
         // Arrange
-        TVCandlestick candlestick = this.CandlesticksFaker.Generate();
-        BinanceFuturesOrder order = this.BinanceFuturesOrdersFaker.Generate();
-        BinanceFuturesOrder orderLater = this.BinanceFuturesOrdersFaker.Generate();
-        orderLater.CreateTime = order.CreateTime.AddMinutes(15);
+        TVCandlestick Candlestick1 = this.CandlesticksFaker.Generate();
+        BinanceFuturesOrder Order1 = this.BinanceFuturesOrdersFaker.Generate();
+        TVCandlestick Candlestick2 = this.CandlesticksFaker.Generate();
+        BinanceFuturesOrder Order2 = this.BinanceFuturesOrdersFaker.Generate();
+        Order1.CreateTime = Candlestick1.Date;
+        Order2.CreateTime = Candlestick2.Date;
         
+        if (Candlestick1.Date > Candlestick2.Date)
+        {
+            (Candlestick1, Candlestick2) = (Candlestick2, Candlestick1);
+            (Order1, Order2) = (Order2, Order1);
+        }
+        
+
         // Act
-        this.SUT.AddFuturesOrder(order, candlestick, out int order_identity, out int candlestick_identity);
-        this.SUT.AddFuturesOrder(orderLater, candlestick_identity, out int orderLater_identity);
+        this.SUT.AddFuturesOrder(Order1, Candlestick1, out int Order1_Id, out int Candlestick1_Id);
+        this.SUT.AddFuturesOrder(Order2, Candlestick2, out int Order2_Id, out int Candlestick2_Id);
+        this.CleanupList.Add(Order1); this.CleanupList.Add(Candlestick1);
+        this.CleanupList.Add(Order2); this.CleanupList.Add(Candlestick2);
+
 
         // Assert
-        candlestick_identity.Should().BeGreaterThan(0);
-        order_identity.Should().BeGreaterThan(0);
-        orderLater_identity.Should().BeGreaterThan(0);
+        Order1_Id.Should().BeGreaterThan(0);
+        Candlestick1_Id.Should().BeGreaterThan(0);
+        Order2_Id.Should().BeGreaterThan(0);
+        Candlestick2_Id.Should().BeGreaterThan(0);
     }
     #endregion
 }

@@ -65,12 +65,15 @@
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Candlesticks.sql" />
-    <Build Include="dbo\Stored procedures\spAddCandlestick.sql" />
+    <Build Include="dbo\Stored procedures\spAddCandlestickIfNotExists.sql" />
     <Build Include="dbo\Tables\Futures orders.sql" />
-    <Build Include="dbo\Stored procedures\spAddFuturesOrder.sql" />
-    <Build Include="dbo\Stored procedures\spAddFuturesOrderAndCandlestick.sql" />
+    <Build Include="dbo\Stored procedures\spAddFuturesOrderIfNotExists.sql" />
+    <Build Include="dbo\Stored procedures\spAddFuturesOrderAndCandlestickIfNotExists.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dbo\Publish locations\Local Binance trading logs.publish.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <RefactorLog Include="Trading Data Logs.refactorlog" />
   </ItemGroup>
 </Project>

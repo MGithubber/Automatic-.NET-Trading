@@ -12,6 +12,8 @@ using AutomaticDotNETtrading.Infrastructure.Models;
 using Binance.Net.Objects.Models.Futures;
 using Binance.Net.Enums;
 using System.Diagnostics;
+using AutomaticDotNETtrading.Domain.Models;
+using Skender.Stock.Indicators;
 
 namespace AutomaticDotNETtrading.Infrastructure.Data;
 
@@ -30,9 +32,12 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
         try
         {
             this.Connection = this.ConnectionFactory.CreateConnection();
-
-            using SqlCommand command = new SqlCommand("spAddCandlestick", this.Connection);
-            command.CommandType = CommandType.StoredProcedure;
+            using SqlCommand command = new SqlCommand
+            {
+                CommandText = "spAddCandlestickIfNotExists",
+                Connection = this.Connection,
+                CommandType = CommandType.StoredProcedure,
+            };
 
             #region SqlCommand parameters
             command.Parameters.AddWithValue("@CurrencyPair", candlestick.CurrencyPair.Name);
@@ -45,13 +50,19 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
             {
                 ParameterName = "@ScopeIdentity",
                 SqlDbType = SqlDbType.Int,
-                Direction = ParameterDirection.Output,
-            }); 
+                Direction = ParameterDirection.ReturnValue,
+            });
             #endregion
-
-            command.ExecuteNonQuery();
             
+            
+            int rows = command.ExecuteNonQuery();
             this.Connection.Close();
+            
+            if (rows < 1)
+            {
+                throw new ArgumentException($"A candlestick with {nameof(CurrencyPair)} == \"{candlestick.CurrencyPair.Name}\" and {nameof(candlestick.Date)} == \"{candlestick.Date}\" is already in the database", nameof(candlestick));
+            }
+
             
             return (int)command.Parameters["@ScopeIdentity"].Value;
         }
@@ -59,99 +70,33 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
         finally { this.Connection?.Close(); }
     }
     
-    public int AddFuturesOrder(BinanceFuturesOrder futuresOrder)
+    public void AddFuturesOrder(BinanceFuturesOrder FuturesOrder, TVCandlestick Candlestick, out int FuturesOrder_Id, out int Candlestick_Id)
     {
         try
         {
             this.Connection = this.ConnectionFactory.CreateConnection();
-
-            using SqlCommand command = new SqlCommand("spAddFuturesOrder", this.Connection);
-            command.CommandType = CommandType.StoredProcedure;
-
-            #region SqlCommand parameters
-            command.Parameters.AddWithValue("@Symbol", futuresOrder.Symbol);
-            command.Parameters.AddWithValue("@BinanceID", futuresOrder.Id);
-            command.Parameters.AddWithValue("@CreateTime", futuresOrder.CreateTime);
-            command.Parameters.AddWithValue("@OrderSide", futuresOrder.Side.ToString());
-            command.Parameters.AddWithValue("@OrderType", futuresOrder.Type.ToString());
-            command.Parameters.AddWithValue("@Price", futuresOrder.Price);
-            command.Parameters.AddWithValue("@Quantity", futuresOrder.Quantity);
-            command.Parameters.Add(new SqlParameter
+            using SqlCommand command = new SqlCommand
             {
-                ParameterName = "@ScopeIdentity",
-                SqlDbType = SqlDbType.Int,
-                Direction = ParameterDirection.Output,
-            }); 
-            #endregion
-
-            command.ExecuteNonQuery();
-
-            this.Connection.Close();
-            
-            return (int)command.Parameters["@ScopeIdentity"].Value;
-        }
-        catch { throw; }
-        finally { this.Connection?.Close(); }
-    }
-    public void AddFuturesOrder(BinanceFuturesOrder futuresOrder, int Candlestick_Identity, out int FuturesOrder_Identity)
-    {
-        try
-        {
-            this.Connection = this.ConnectionFactory.CreateConnection();
-
-            using SqlCommand command = new SqlCommand("spAddFuturesOrder", this.Connection);
-            command.CommandType = CommandType.StoredProcedure;
+                CommandText = "spAddFuturesOrderAndCandlestickIfNotExists",
+                Connection = this.Connection,
+                CommandType = CommandType.StoredProcedure,
+            };
 
             #region SqlCommand parameters
-            command.Parameters.AddWithValue("@CandlestickID", Candlestick_Identity);
-            command.Parameters.AddWithValue("@Symbol", futuresOrder.Symbol);
-            command.Parameters.AddWithValue("@BinanceID", futuresOrder.Id);
-            command.Parameters.AddWithValue("@CreateTime", futuresOrder.CreateTime);
-            command.Parameters.AddWithValue("@OrderSide", futuresOrder.Side.ToString());
-            command.Parameters.AddWithValue("@OrderType", futuresOrder.Type.ToString());
-            command.Parameters.AddWithValue("@Price", futuresOrder.Price);
-            command.Parameters.AddWithValue("@Quantity", futuresOrder.Quantity);
-            command.Parameters.Add(new SqlParameter
-            {
-                ParameterName = "@ScopeIdentity",
-                SqlDbType = SqlDbType.Int,
-                Direction = ParameterDirection.Output,
-            });
-            #endregion
-            
-            command.ExecuteNonQuery();
-            
-            this.Connection.Close();
-            
-            FuturesOrder_Identity = (int)command.Parameters["@ScopeIdentity"].Value;
-        }
-        catch { throw; }
-        finally { this.Connection?.Close(); }
-    }
-    public void AddFuturesOrder(BinanceFuturesOrder futuresOrder, TVCandlestick candlestick, out int FuturesOrder_Identity, out int Candlestick_Identity)
-    {
-        try
-        {
-            this.Connection = this.ConnectionFactory.CreateConnection();
-            
-            using SqlCommand command = new SqlCommand("spAddFuturesOrderAndCandlestick", this.Connection);
-            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@CurrencyPair", Candlestick.CurrencyPair.Name);
 
-            #region SqlCommand parameters
-            command.Parameters.AddWithValue("@CurrencyPair", candlestick.CurrencyPair.Name);
+            command.Parameters.AddWithValue("@BinanceID", FuturesOrder.Id);
+            command.Parameters.AddWithValue("@CreateTime", FuturesOrder.CreateTime);
+            command.Parameters.AddWithValue("@OrderSide", FuturesOrder.Side.ToString());
+            command.Parameters.AddWithValue("@OrderType", FuturesOrder.Type.ToString());
+            command.Parameters.AddWithValue("@Price", FuturesOrder.Price);
+            command.Parameters.AddWithValue("@Quantity", FuturesOrder.Quantity);
 
-            command.Parameters.AddWithValue("@BinanceID", futuresOrder.Id);
-            command.Parameters.AddWithValue("@CreateTime", futuresOrder.CreateTime);
-            command.Parameters.AddWithValue("@OrderSide", futuresOrder.Side.ToString());
-            command.Parameters.AddWithValue("@OrderType", futuresOrder.Type.ToString());
-            command.Parameters.AddWithValue("@Price", futuresOrder.Price);
-            command.Parameters.AddWithValue("@Quantity", futuresOrder.Quantity);
-
-            command.Parameters.AddWithValue("@DateTime", candlestick.Date);
-            command.Parameters.AddWithValue("@Open", candlestick.Open);
-            command.Parameters.AddWithValue("@Close", candlestick.Close);
-            command.Parameters.AddWithValue("@High", candlestick.High);
-            command.Parameters.AddWithValue("@Low", candlestick.Low);
+            command.Parameters.AddWithValue("@DateTime", Candlestick.Date);
+            command.Parameters.AddWithValue("@Open", Candlestick.Open);
+            command.Parameters.AddWithValue("@Close", Candlestick.Close);
+            command.Parameters.AddWithValue("@High", Candlestick.High);
+            command.Parameters.AddWithValue("@Low", Candlestick.Low);
 
             command.Parameters.Add(new SqlParameter
             {
@@ -167,12 +112,12 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
             });
             #endregion
 
+            
             command.ExecuteNonQuery();
-
             this.Connection.Close();
             
-            FuturesOrder_Identity = (int)command.Parameters["@FuturesOrder_Identity"].Value;
-            Candlestick_Identity = (int)command.Parameters["@Candlestick_Identity"].Value;
+            FuturesOrder_Id = (int)command.Parameters["@FuturesOrder_Identity"].Value;
+            Candlestick_Id = (int)command.Parameters["@Candlestick_Identity"].Value;
         }
         catch { throw; }
         finally { this.Connection?.Close(); }
