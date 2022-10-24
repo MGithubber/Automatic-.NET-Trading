@@ -200,7 +200,7 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
         
         return CallResult;
     }
-    public async Task<CallResult<BinanceFuturesPlacedOrder>> ClosePositionAsync()
+    public async Task<CallResult<BinanceFuturesOrder>> ClosePositionAsync()
     {
         #region Invalid input handling
         if (this.Position is null)
@@ -210,17 +210,20 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
         CallResult<BinanceFuturesPlacedOrder> ClosingCallResult = await this.TradingClient.PlaceOrderAsync(symbol: this.CurrencyPair.Name, side: this.Position.EntryOrder.Side.Invert(), type: FuturesOrderType.Market, quantity: this.Position.EntryOrder.Quantity);
         if (!ClosingCallResult.Success)
         {
-            return ClosingCallResult;
+            return ClosingCallResult.As<BinanceFuturesOrder>(null);
         }
 
+
+        Task<CallResult<BinanceFuturesOrder>> GetFuturesOrderTask = this.GetOrderAsync(ClosingCallResult.Data.Id);
+        
         WebCallResult<IEnumerable<CallResult<BinanceFuturesCancelOrder>>> CancellingCallResult = await this.TradingClient.CancelMultipleOrdersAsync(symbol: this.CurrencyPair.Name, this.Position.GetOrdersIDs().ToList());
         if (!CancellingCallResult.Success)
         {
-            return ClosingCallResult;
+            return ClosingCallResult.As((await GetFuturesOrderTask).Data);
         }
-
+        
         this.Position = null;
-        return ClosingCallResult;
+        return ClosingCallResult.As((await GetFuturesOrderTask).Data);
     }
     public async Task<CallResult<BinanceFuturesPlacedOrder>> PlaceStopLossAsync(decimal price)
     {
@@ -237,14 +240,14 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
         {
             return CallResult;
         }
-
-        BinanceFuturesPlacedOrder StopLoss = CallResult.Data;
+        
+        Task<CallResult<BinanceFuturesOrder>> GetFuturesOrderTask = this.GetOrderAsync(CallResult.Data.Id);
         if (this.Position.StopLossOrder is not null)
         {
-            this.TradingClient.CancelOrderAsync(symbol: CurrencyPair.Name, this.Position.StopLossOrder.Id);
+            await this.TradingClient.CancelOrderAsync(symbol: CurrencyPair.Name, this.Position.StopLossOrder.Id);
         }
-        this.Position.StopLossOrder = (await this.GetOrderAsync(StopLoss.Id)).Data;
-
+        this.Position.StopLossOrder = (await GetFuturesOrderTask).Data;
+        
         return CallResult;
     } 
     #endregion

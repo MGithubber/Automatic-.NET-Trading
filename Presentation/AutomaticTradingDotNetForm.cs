@@ -23,11 +23,13 @@ public partial class AutomaticTradingDotNetForm : Form
     public AutomaticTradingDotNetForm() => this.InitializeComponent();
 
     private void AutomaticTradingDotNetForm_Load(object sender, EventArgs e) { }
-    
-    
+
+
     //// //// //// //// //// //// //// ////
-    
-    
+
+    private const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False";
+    private const string DatabaseName = "Binance trading logs";
+
     private readonly object EventsPadLock = new object();
     private MPoolTradingService<TVCandlestick, SqlConnection>? MPoolTradingService;
     private async Task StartPoolTradingAsync()
@@ -147,15 +149,15 @@ public partial class AutomaticTradingDotNetForm : Form
                 });
             }
         }
-        void LuxAlgoPsar_OnPositionClosed(object? sender, KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder> e)
+        void LuxAlgoPsar_OnPositionClosed(object? sender, KeyValuePair<TVCandlestick, BinanceFuturesOrder> e)
         {
             lock (this.EventsPadLock)
             {
                 Task.Run(() =>
                 {
                     _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
-
-                    BinanceFuturesPlacedOrder CloseOrder = e.Value;
+                    
+                    BinanceFuturesOrder CloseOrder = e.Value;
                     string SymbolName = CloseOrder.Symbol;
                     string Side = CloseOrder.Side.ToString().ToUpper();
 
@@ -174,7 +176,7 @@ public partial class AutomaticTradingDotNetForm : Form
 
         //// ////
 
-        SqlDatabaseConnectionFactory SqlDatabaseConnectionFactory = new SqlDatabaseConnectionFactory(String.Empty, String.Empty);
+        SqlDatabaseConnectionFactory SqlDatabaseConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString, DatabaseName);
         TradingDataDbService TradingDataDbService = new TradingDataDbService(SqlDatabaseConnectionFactory);
         
         //// ////

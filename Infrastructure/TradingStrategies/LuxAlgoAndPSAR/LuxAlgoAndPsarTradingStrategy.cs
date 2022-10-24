@@ -34,13 +34,13 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandles
     public event EventHandler<KeyValuePair<TVCandlestick, FuturesPosition>>? OnPositionOpened;
     public event EventHandler<KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder>>? OnStopLossUpdated;
     public event EventHandler<TVCandlestick>? OnStopOutDetected;
-    public event EventHandler<KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder>>? OnPositionClosed;
+    public event EventHandler<KeyValuePair<TVCandlestick, BinanceFuturesOrder>>? OnPositionClosed;
     public event EventHandler<Dictionary<TVCandlestick, decimal>>? OnParabolicSARdivergence;
-
+    
     protected void OnPositionOpened_Invoke(object sender, KeyValuePair<TVCandlestick, FuturesPosition> e) => this.OnPositionOpened?.Invoke(sender, e);
     protected void OnStopLossUpdated_Invoke(object sender, KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder> e) => this.OnStopLossUpdated?.Invoke(sender, e);
     protected void OnStopOutDetected_Invoke(object sender, TVCandlestick e) => this.OnStopOutDetected?.Invoke(sender, e);
-    protected void OnPositionClosed_Invoke(object sender, KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder> e) => this.OnPositionClosed?.Invoke(sender, e);
+    protected void OnPositionClosed_Invoke(object sender, KeyValuePair<TVCandlestick, BinanceFuturesOrder> e) => this.OnPositionClosed?.Invoke(sender, e);
     protected void OnParabolicSARdivergence_Invoke(object sender, Dictionary<TVCandlestick, decimal> e) => this.OnParabolicSARdivergence?.Invoke(sender, e);
     #endregion
 
@@ -83,21 +83,22 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandles
     }
     protected async Task CloseFuturesPosition()
     {
-        CallResult<BinanceFuturesPlacedOrder> CallResult = await this.ContractTrader.ClosePositionAsync();
-
+        CallResult<BinanceFuturesOrder> CallResult = await this.ContractTrader.ClosePositionAsync();
+        
         if (!CallResult.Success)
             throw new Exception($"Failed to close a futures order position");
 
-        this.OnPositionClosed_Invoke(this, new KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder>(this.LastCandle, CallResult.Data));
+        this.OnPositionClosed_Invoke(this, new KeyValuePair<TVCandlestick, BinanceFuturesOrder>(this.LastCandle, CallResult.Data));
     }
     protected async Task PlaceNewStopLoss(decimal price)
     {
         CallResult<BinanceFuturesPlacedOrder> CallResult = await this.ContractTrader.PlaceStopLossAsync(price);
         
-        if (!CallResult.Success)
-            throw new Exception($"Failed to place a futures stop loss order");
-
-        this.OnPositionClosed_Invoke(this, new KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder>(this.LastCandle, CallResult.Data));
+        _ = this.ContractTrader.Position ?? throw new NullReferenceException($"{nameof(this.ContractTrader.Position)} was NULL");
+        if (this.ContractTrader.Position.StopLossOrder is null)
+            throw new Exception($"Failed to place a futures stop loss order", new NullReferenceException(nameof(this.ContractTrader.Position)));
+        
+        this.OnPositionClosed_Invoke(this, new KeyValuePair<TVCandlestick, BinanceFuturesOrder>(this.LastCandle, this.ContractTrader.Position.StopLossOrder));
     }
 
     protected bool IsInPosition() => this.ContractTrader.IsInPosition();

@@ -16,6 +16,7 @@ using Binance.Net.Enums;
 using Binance.Net.Objects.Models.Futures;
 using Binance.Net.Objects.Models.Spot;
 
+using CryptoExchange.Net.CommonObjects;
 using CryptoExchange.Net.Objects;
 
 using Skender.Stock.Indicators;
@@ -45,13 +46,7 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
 
         //// ////
         
-        this.OnNewCandlestickRegistered += MPoolTradingService_OnNewCandlestickRegistered;
-        void MPoolTradingService_OnNewCandlestickRegistered(object? sender, TCandlestick e)
-        {
-            throw new NotImplementedException();
-            // // TO DO save log in database // //
-            // // TO DO save candlestick in database // //
-        }
+        this.OnNewCandlestickRegistered += (object? sender, TCandlestick e) => this.TradingDataDbService.AddCandlestick(e);
 
         this.Traders.ForEach(trader =>
         {
@@ -60,13 +55,18 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
         });
         void Trader_OnPositionOpened(object? sender, KeyValuePair<TCandlestick, FuturesPosition> e)
         {
-            throw new NotImplementedException();
-            // // TO DO save log in database // //
+            new List<BinanceFuturesOrder> { e.Value.EntryOrder, e.Value.StopLossOrder!, e.Value.TakeProfitOrder! }
+            .Where(order => order is not null)
+            .ToList()
+            .ForEach(order => this.TradingDataDbService.AddFuturesOrder(order, e.Key, out int _, out int _));
+
+            // // TO DO position saving in the database // //
         }
-        void Trader_OnPositionClosed(object? sender, KeyValuePair<TCandlestick, BinanceFuturesPlacedOrder> e)
+        void Trader_OnPositionClosed(object? sender, KeyValuePair<TCandlestick, BinanceFuturesOrder> e)
         {
-            throw new NotImplementedException();
-            // // TO DO save log in database // //
+            this.TradingDataDbService.AddFuturesOrder(e.Value, e.Key, out int _, out int _);
+            
+            // // TO DO position saving in the database // //
         }
     }
 

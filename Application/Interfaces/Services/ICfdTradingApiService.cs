@@ -34,7 +34,7 @@ public interface ICfdTradingApiService
     
     #region Binance orders placing
     public Task<CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>>> OpenPositionAtMarketPriceAsync(OrderSide OrderSide, decimal MarginBUSD = decimal.MaxValue, decimal? StopLoss_price = null, decimal? TakeProfit_price = null);
-    public Task<CallResult<BinanceFuturesPlacedOrder>> ClosePositionAsync();
+    public Task<CallResult<BinanceFuturesOrder>> ClosePositionAsync();
     public Task<CallResult<BinanceFuturesPlacedOrder>> PlaceStopLossAsync(decimal price);
     #endregion
 
