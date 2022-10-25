@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -9,6 +10,7 @@ using CryptoExchange.Net.CommonObjects;
 
 namespace AutomaticDotNETtrading.Domain.Models;
 
+[DebuggerDisplay("{Base, nq}{\"/\", nq}{Quote, nq}")]
 public class CurrencyPair : ICloneable
 {
     public string Base { get; }

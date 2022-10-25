@@ -209,7 +209,7 @@ public class TradingDataDbServiceTests
         
         // Act
         this.GetFakeCandlesticks(100, 150)
-            .DistinctBy(c => (c.CurrencyPair.Name, c.Date)).ToList()
+            .DistinctBy(c => (c.CurrencyPair, c.Date)).ToList()
             .ForEach(c => Candlestick_IDs.Add(this.SUT.AddCandlestick(c)));
         
         TVCandlestick FakeCandlestick = this.GetFakeCandlestick();

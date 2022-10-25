@@ -62,7 +62,7 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
         WebCallResult<BinancePrice> callResult = await this.ExchangeData.GetPriceAsync(this.CurrencyPair.Name);
         if (!callResult.Success)
         {
-            throw new Exception($"Could not get the price for {this.CurrencyPair.Name}");
+            throw new Exception($"Could not get the price for {this.CurrencyPair}");
         }
         
         return callResult.Data.Price;
@@ -75,10 +75,10 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
 
         BinanceFuturesAccountAsset[] filteredAssets = callResult.Data.Assets.Where(binanceAsset => this.CurrencyPair.Name.EndsWith(binanceAsset.Asset)).ToArray();
         if (filteredAssets.Length == 0)
-            throw new Exception($"No assets found for {this.CurrencyPair.Name}");
+            throw new Exception($"No assets found for {this.CurrencyPair}");
 
         else if (filteredAssets.Length > 1)
-            throw new Exception($"Multiple margin-assets found for {this.CurrencyPair.Name}");
+            throw new Exception($"Multiple margin-assets found for {this.CurrencyPair}");
 
         return filteredAssets[0].AvailableBalance;
     }

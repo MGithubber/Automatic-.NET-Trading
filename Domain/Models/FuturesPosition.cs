@@ -30,7 +30,7 @@ public class FuturesPosition
                 throw new ArgumentNullException(nameof(value), $"The {nameof(this.EntryOrder)} can't be initialised with a NULL value");
             
             #region Incompatible binance futures orders
-            if (value.Symbol != this.CurrencyPair.Name)
+            if (value.Symbol != this.CurrencyPair)
                 throw new ArgumentException($"The {nameof(this.StopLossOrder)} member was given a value with a diffrent {typeof(CurrencyPair).Name}", nameof(this.StopLossOrder));
 
             if (value.Type != FuturesOrderType.Market)
@@ -52,7 +52,7 @@ public class FuturesPosition
             }
             
             #region Incompatible binance futures orders
-            if (value.Symbol != this.CurrencyPair.Name)
+            if (value.Symbol != this.CurrencyPair)
                 throw new ArgumentException($"The {nameof(this.StopLossOrder)} member was given a value with a diffrent {typeof(CurrencyPair).Name}", nameof(this.StopLossOrder));
 
             if (value.Type == FuturesOrderType.Market)
@@ -74,7 +74,7 @@ public class FuturesPosition
             }
 
             #region Incompatible binance futures orders
-            if (value.Symbol != this.CurrencyPair.Name)
+            if (value.Symbol != this.CurrencyPair)
                 throw new ArgumentException($"The {nameof(this.StopLossOrder)} member was given a value with a diffrent {typeof(CurrencyPair).Name}", nameof(this.StopLossOrder));
 
             if (value.Type == FuturesOrderType.Market)

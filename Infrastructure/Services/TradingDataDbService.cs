@@ -62,7 +62,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
             int DbIdentity = (int)command.Parameters["@ScopeIdentity"].Value;
             if (DbIdentity < 1)
             {
-                throw new ArgumentException($"A candlestick with {nameof(CurrencyPair)} == \"{Candlestick.CurrencyPair.Name}\" and {nameof(Candlestick.Date)} == \"{Candlestick.Date}\" is already in the database", nameof(Candlestick));
+                throw new ArgumentException($"A candlestick with {nameof(CurrencyPair)} == \"{Candlestick.CurrencyPair}\" and {nameof(Candlestick.Date)} == \"{Candlestick.Date}\" is already in the database", nameof(Candlestick));
             }
 
             return DbIdentity;
@@ -100,7 +100,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
             int DeletedIdentity = (int)command.Parameters["@DeletedIdentity"].Value;
             if (DeletedIdentity < 1)
             {
-                throw new ArgumentException($"A candlestick with {nameof(CurrencyPair)} == \"{Candlestick.CurrencyPair.Name}\" and {nameof(Candlestick.Date)} == \"{Candlestick.Date}\" could not be deleted from the database", nameof(Candlestick));
+                throw new ArgumentException($"A candlestick with {nameof(CurrencyPair)} == \"{Candlestick.CurrencyPair}\" and {nameof(Candlestick.Date)} == \"{Candlestick.Date}\" could not be deleted from the database", nameof(Candlestick));
             }
 
             return DeletedIdentity;
@@ -115,7 +115,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
         {
             if (FuturesOrder.Symbol != Candlestick.CurrencyPair.Name)
             {
-                throw new ArgumentException($"The currency pair of the {nameof(Candlestick)} ({Candlestick.CurrencyPair.Name}) doesn't match the symbol of the {nameof(FuturesOrder)} ({FuturesOrder.Symbol})");
+                throw new ArgumentException($"The currency pair of the {nameof(Candlestick)} ({Candlestick.CurrencyPair}) doesn't match the symbol of the {nameof(FuturesOrder)} ({FuturesOrder.Symbol})");
             }
 
 
