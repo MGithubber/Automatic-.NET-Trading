@@ -110,27 +110,8 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
 
     ////  ////  ////
 
-    private readonly object PadLock = new object();
     private readonly WebDriverWait WebWait;
-    private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
-    private async Task LockedActionAsync(Action action)
-    {
-        try
-        {
-            await this.Semaphore.WaitAsync();
-            action.Invoke();
-        }
-        finally { this.Semaphore.Release(); }
-    }
-    private async Task<T> LockedFuncAsync<T>(Func<T> func)
-    {
-        try
-        {
-            await this.Semaphore.WaitAsync();
-            return func.Invoke();
-        }
-        finally { this.Semaphore.Release(); }
-    }
+    private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(2);
     
     private readonly WebElement Chart;
 
@@ -142,7 +123,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     
     private async Task WebpageZoomInAsync()
     {
-        await this.LockedActionAsync(() =>
+        await Task.Run(() =>
         {
             int width = this.Chart.Size.Width;
             int height = this.Chart.Size.Height;
@@ -156,7 +137,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     
     private async Task ExportAndReadChartDataAsync()
     {
-        await this.LockedActionAsync(async () =>
+        await Task.Run(() =>
         {
             string[] files_before = Directory.GetFiles(this.downloadsDirectory);
             try
@@ -172,8 +153,8 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
                 // this.ChromeDriver.MoveCursorToLocationAndClick(); Thread.Sleep(500); // export chart data
                 // this.ChromeDriver.MoveCursorToLocationAndClick(); Thread.Sleep(500); // export chart data confirmation
             }
-            
-            await Task.Delay(1000);
+
+            Thread.Sleep(1000);
 
             string[] files_after = Directory.GetFiles(this.downloadsDirectory);
             string[] new_files = files_after.Where(file_path => !files_before.Contains(file_path)).Where(file_path => file_path.EndsWith(".csv")).ToArray();
@@ -202,64 +183,61 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     
     private TVCandlestick DataWindow_text_to_Candlestick(string data_window_text)
     {
-        lock (this.PadLock)
+        List<string> data_window_lines = data_window_text.Replace("\r\n", "\n").Split('\n').ToList();
+
+        //////
+
+        string[] desired_strings = new string[] { "Date", "Time", "Open", "Close", "High", "Low", "Buy", "Strong Buy", "Sell", "Strong Sell", "Exit Buy", "Exit Sell" };
+
+        data_window_lines.RemoveAll(str =>
         {
-            List<string> data_window_lines = data_window_text.Replace("\r\n", "\n").Split('\n').ToList();
-
-            //////
-            
-            string[] desired_strings = new string[] { "Date", "Time", "Open", "Close", "High", "Low", "Buy", "Strong Buy", "Sell", "Strong Sell", "Exit Buy", "Exit Sell" };
-
-            data_window_lines.RemoveAll(str =>
-            {
-                foreach (string desired_str in desired_strings)
-                    if (str.StartsWith(desired_str))
-                        return false;
-
-                return true;
-            });
-            
             foreach (string desired_str in desired_strings)
-            {
-                int index = data_window_lines.FindIndex(item => item.StartsWith(desired_str)); // find index of desired string in list
-                data_window_lines[index] = data_window_lines[index].Replace(desired_str, string.Empty);
-            }
+                if (str.StartsWith(desired_str))
+                    return false;
 
-            //////
-            
-            return new TVCandlestick
-            {
-                Date = DateTime.Parse(data_window_lines[1], CultureInfo.InvariantCulture),
+            return true;
+        });
 
-                Open = decimal.Parse(data_window_lines[2], CultureInfo.InvariantCulture),
-                High = decimal.Parse(data_window_lines[3], CultureInfo.InvariantCulture),
-                Low = decimal.Parse(data_window_lines[4], CultureInfo.InvariantCulture),
-                Close = decimal.Parse(data_window_lines[5], CultureInfo.InvariantCulture),
-                
-                Buy = decimal.Parse(data_window_lines[6], CultureInfo.InvariantCulture) == decimal.One,
-                StrongBuy = decimal.Parse(data_window_lines[7], CultureInfo.InvariantCulture) == decimal.One,
-                Sell = decimal.Parse(data_window_lines[8], CultureInfo.InvariantCulture) == decimal.One,
-                StrongSell = decimal.Parse(data_window_lines[9], CultureInfo.InvariantCulture) == decimal.One,
-                ExitBuy = double.Parse(data_window_lines[10].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture),
-                ExitSell = double.Parse(data_window_lines[11].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture)
-            };
+        foreach (string desired_str in desired_strings)
+        {
+            int index = data_window_lines.FindIndex(item => item.StartsWith(desired_str)); // find index of desired string in list
+            data_window_lines[index] = data_window_lines[index].Replace(desired_str, string.Empty);
         }
+
+        //////
+
+        return new TVCandlestick
+        {
+            Date = DateTime.Parse(data_window_lines[1], CultureInfo.InvariantCulture),
+
+            Open = decimal.Parse(data_window_lines[2], CultureInfo.InvariantCulture),
+            High = decimal.Parse(data_window_lines[3], CultureInfo.InvariantCulture),
+            Low = decimal.Parse(data_window_lines[4], CultureInfo.InvariantCulture),
+            Close = decimal.Parse(data_window_lines[5], CultureInfo.InvariantCulture),
+
+            Buy = decimal.Parse(data_window_lines[6], CultureInfo.InvariantCulture) == decimal.One,
+            StrongBuy = decimal.Parse(data_window_lines[7], CultureInfo.InvariantCulture) == decimal.One,
+            Sell = decimal.Parse(data_window_lines[8], CultureInfo.InvariantCulture) == decimal.One,
+            StrongSell = decimal.Parse(data_window_lines[9], CultureInfo.InvariantCulture) == decimal.One,
+            ExitBuy = double.Parse(data_window_lines[10].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture),
+            ExitSell = double.Parse(data_window_lines[11].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture)
+        };
     }
     private string ReadDataWindow() => this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text;
     private async Task<TVCandlestick> GetLastCompleteCandlestickAsync()
     {
-        return await this.LockedFuncAsync(() =>
+        return await Task.Run(() =>
         {
             int width = this.Chart.Size.Width;
             int height = this.Chart.Size.Height;
-            
+
             this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(-0.267 * width), Convert.ToInt32(0.128 * height));
             return this.DataWindow_text_to_Candlestick(this.ReadDataWindow());
         });
     }
     private async Task<TVCandlestick> GetUnfinishedCandlestickAsync()
     {
-        return await this.LockedFuncAsync(() =>
+        return await Task.Run(() =>
         {
             int width = this.Chart.Size.Width;
             int height = this.Chart.Size.Height;
@@ -351,17 +329,27 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     
     public void Close()
     {
-        lock (this.PadLock)
+        try
         {
+            this.Semaphore.Wait();
             this.ChromeDriver.Close();
+        }
+        finally
+        {
+            this.Semaphore.Release();
             this.Semaphore.Dispose();
         }
     }
     public void Quit()
     {
-        lock (this.PadLock)
+        try
         {
+            this.Semaphore.Wait();
             this.ChromeDriver.Quit();
+        }
+        finally
+        {
+            this.Semaphore.Release();
             this.Semaphore.Dispose();
         }
     }
