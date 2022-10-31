@@ -113,3 +113,4 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandles
     }
     public abstract void MakeMove();
 }
+    

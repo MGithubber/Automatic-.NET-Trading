@@ -201,7 +201,7 @@ public partial class AutomaticTradingDotNetForm : Form
 
 
     //// //// //// //// ////
-
+    
     
     protected override void OnFormClosed(FormClosedEventArgs e) => this.MPoolTradingService?.QuitChartDataService();
 }
