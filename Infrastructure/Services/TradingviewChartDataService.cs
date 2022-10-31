@@ -82,8 +82,8 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         this.ChromeOptions.AddUserProfilePreference("download.prompt_for_download", false);
         this.ChromeOptions.AddUserProfilePreference("disable-popup-blocking", true);
         this.ChromeOptions.AddUserProfilePreference("block_third_party_cookies", true);
-
-        this.ChromeDriver = new ChromeDriver(chromeDriverDirectory, ChromeOptions);
+        
+        this.ChromeDriver = new ChromeDriver(chromeDriverDirectory, this.ChromeOptions);
         this.ChromeDriver.Url = "https://www.tradingview.com/chart/oxqzhJn4/?symbol=BINANCE%3AETHBUSD";
 
         #region Locators
@@ -101,11 +101,11 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         this.ExportChartDataConfirmButton_Locator = ExportChartDataConfirmButton_Locator;
         #endregion
 
-        this.WebWait = new WebDriverWait(ChromeDriver, new TimeSpan(0, 0, 0, 0, 1500));
-
+        this.WebWait = new WebDriverWait(this.ChromeDriver, new TimeSpan(0, 0, 0, 0, 1500));
+        
         // // //
         
-        this.Chart = (WebElement)WebWait.Until(driver => driver.FindElement(this.Chart_Locator));
+        this.Chart = (WebElement)this.WebWait.Until(driver => driver.FindElement(this.Chart_Locator));
     }
 
     ////  ////  ////
@@ -245,6 +245,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             };
         }
     }
+    private string ReadDataWindow() => this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text;
     private async Task<TVCandlestick> GetLastCompleteCandlestickAsync()
     {
         return await this.LockedFuncAsync(() =>
@@ -253,7 +254,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             int height = this.Chart.Size.Height;
             
             this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(-0.267 * width), Convert.ToInt32(0.128 * height));
-            return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
+            return this.DataWindow_text_to_Candlestick(this.ReadDataWindow());
         });
     }
     private async Task<TVCandlestick> GetUnfinishedCandlestickAsync()
@@ -264,7 +265,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             int height = this.Chart.Size.Height;
 
             this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(0.267 * width), Convert.ToInt32(0.128 * height));
-            return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
+            return this.DataWindow_text_to_Candlestick(this.ReadDataWindow());
         });
     }
     
