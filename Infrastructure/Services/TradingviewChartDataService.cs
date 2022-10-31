@@ -55,7 +55,21 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     private readonly ChromeOptions ChromeOptions;
     private readonly ChromeDriver ChromeDriver;
     private readonly string downloadsDirectory;
-    private readonly object PadLock = new object();
+
+    #region Locators
+    private readonly By DataWindow_Locator;
+    private readonly By Chart_Locator;
+
+    private readonly By ZoomInButton_Locator;
+    private readonly By ZoomOutButton_Locator;
+    private readonly By ScrollLeftButton_Locator;
+    private readonly By ScrollRightButton_Locator;
+    private readonly By ResetChartButton_Locator;
+
+    private readonly By ManageLayoutsButton_Locator;
+    private readonly By ExportChartDataButton_Locator;
+    private readonly By ExportChartDataConfirmButton_Locator;
+    #endregion
 
     public TradingviewChartDataService(string chromeDriverDirectory, string userDataDirectory, string downloadsDirectory, By Chart_Locator, By DataWindow_Locator, By ZoomInButton_Locator, By ZoomOutButton_Locator, By ScrollLeftButton_Locator, By ScrollRightButton_Locator, By ResetChartButton_Locator, By ManageLayoutsButton_Locator, By ExportChartDataButton_Locator, By ExportChartDataConfirmButton_Locator)
     {
@@ -95,32 +109,17 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     }
 
     ////  ////  ////
-    
+
+    private readonly object PadLock = new object();
     private readonly WebDriverWait WebWait;
 
     private readonly WebElement Chart;
 
     private List<TVCandlestick> RegisteredTVCandlesticks = new List<TVCandlestick>();
     public TVCandlestick[] Candlesticks => this.RegisteredTVCandlesticks.ToArray();
-    
-    #region desired_strings, undesired_strings and locators
-    private readonly IReadOnlyCollection<string> desired_strings = new string[] { "Date", "Time", "Open", "Close", "High", "Low", "Buy", "Strong Buy", "Sell", "Strong Sell", "Exit Buy", "Exit Sell" };
-    private readonly IReadOnlyCollection<string> undesired_strings = new string[] { "Lux Algo Premium [5.1]" };
 
-    private readonly By DataWindow_Locator;
-    private readonly By Chart_Locator;
+    ////  ////  ////
 
-    private readonly By ZoomInButton_Locator;
-    private readonly By ZoomOutButton_Locator;
-    private readonly By ScrollLeftButton_Locator;
-    private readonly By ScrollRightButton_Locator;
-    private readonly By ResetChartButton_Locator;
-
-    private readonly By ManageLayoutsButton_Locator;
-    private readonly By ExportChartDataButton_Locator;
-    private readonly By ExportChartDataConfirmButton_Locator;
-    #endregion
-    
     private async Task WebpageZoomInAsync()
     {
         lock (this.PadLock)
@@ -192,22 +191,19 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             List<string> data_window_lines = data_window_text.Replace("\r\n", "\n").Split('\n').ToList();
 
             //////
-
-            foreach (string undesired_str in this.undesired_strings)
-            {
-                data_window_lines.RemoveAt(data_window_lines.FindIndex(str => str.Contains(undesired_str)));
-            }
+            
+            string[] desired_strings = new string[] { "Date", "Time", "Open", "Close", "High", "Low", "Buy", "Strong Buy", "Sell", "Strong Sell", "Exit Buy", "Exit Sell" };
 
             data_window_lines.RemoveAll(str =>
             {
-                foreach (string desired_str in this.desired_strings)
+                foreach (string desired_str in desired_strings)
                     if (str.StartsWith(desired_str))
                         return false;
 
                 return true;
             });
-
-            foreach (string desired_str in this.desired_strings)
+            
+            foreach (string desired_str in desired_strings)
             {
                 int index = data_window_lines.FindIndex(item => item.StartsWith(desired_str)); // find index of desired string in list
                 data_window_lines[index] = data_window_lines[index].Replace(desired_str, string.Empty);
@@ -243,7 +239,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
                 int height = this.Chart.Size.Height;
 
                 this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(-0.267 * width), Convert.ToInt32(0.128 * height));
-                return DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
+                return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
             }
         });
     }
@@ -255,9 +251,9 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             {
                 int width = this.Chart.Size.Width;
                 int height = this.Chart.Size.Height;
-
+                
                 this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(0.267 * width), Convert.ToInt32(0.128 * height));
-                return DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
+                return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
             }
         });
     }
