@@ -50,7 +50,7 @@ internal static class IWebDriverExtensions
 /// <summary>
 /// Represents an immutable object providing methods for extracting chart data from https://www.tradingview.com using google chrome
 /// </summary>
-public class TradingviewChartDataService : IChartDataService<TVCandlestick>, IDisposable
+public class TradingviewChartDataService : IChartDataService<TVCandlestick>
 {
     private readonly ChromeOptions ChromeOptions;
     private readonly ChromeDriver ChromeDriver;

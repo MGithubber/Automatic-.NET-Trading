@@ -8,7 +8,7 @@ using Skender.Stock.Indicators;
 
 namespace AutomaticDotNETtrading.Application.Interfaces.Services;
 
-public interface IChartDataService<T> where T : IQuote
+public interface IChartDataService<T> : IDisposable where T : IQuote
 {
     /// <summary>
     /// Gets all of the completed candlesticks
