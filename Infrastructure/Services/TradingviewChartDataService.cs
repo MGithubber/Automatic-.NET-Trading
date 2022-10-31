@@ -112,6 +112,25 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
 
     private readonly object PadLock = new object();
     private readonly WebDriverWait WebWait;
+    private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
+    private async Task LockActionAsync(Action action)
+    {
+        try
+        {
+            await this.Semaphore.WaitAsync();
+            action.Invoke();
+        }
+        finally { this.Semaphore.Release(); }
+    }
+    private async Task<T> LockFuncAsync<T>(Func<T> func)
+    {
+        try
+        {
+            await this.Semaphore.WaitAsync();
+            return func.Invoke();
+        }
+        finally { this.Semaphore.Release(); }
+    }
 
     private readonly WebElement Chart;
 
@@ -303,8 +322,11 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     
     public async Task RegisterAllCandlesticksAsync()
     {
-        await this.WebpageZoomInAsync();
-        await this.ExportAndReadChartDataAsync();
+        await this.LockActionAsync(async () =>
+        {
+            await this.WebpageZoomInAsync();
+            await this.ExportAndReadChartDataAsync();
+        });
     }
 
     //// //// ////
@@ -314,6 +336,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         lock (this.PadLock)
         {
             this.ChromeDriver.Close();
+            this.Semaphore.Dispose();
         }
     }
     public void Quit()
@@ -321,6 +344,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         lock (this.PadLock)
         {
             this.ChromeDriver.Quit();
+            this.Semaphore.Dispose();
         }
     }
 }
