@@ -354,11 +354,26 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>, IDi
 
 
     //// //// ////
-    
 
+
+    private bool Disposed = false;
     public void Dispose()
     {
+        this.Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    protected virtual void Dispose(bool disposing)
+    {
+        if (this.Disposed)
+            return;
+
+        if (disposing)
+        {
+            this.Semaphore.Dispose();
+        }
+        
         this.RegisteredTVCandlesticks.Clear();
-        this.Semaphore.Dispose();
+
+        this.Disposed = true;
     }
 }
