@@ -32,8 +32,8 @@ internal static class ProgramIO
     public static readonly FileInfo TradingParametersXMLFile_Short = new FileInfo(@"Process files\Trading Parameters\SHORT parameters.txt");
     
     /////
-
-    public static readonly ApiCredentials BinanceApiCredentials = new ApiCredentials("IctW96tLRARy1J7EeW5BDvlxhihbF30uquSNEAoBm0otz1WsWZW8WgZ9wE8n9fsQ", "5bXCRQgUrqhPFEU4nAYaEMGN3EhrkaTvuKLy7diK22LRs8jLFdYdXL57eshUUyre");
+    
+    public static readonly ApiCredentials BinanceApiCredentials = new ApiCredentials(File.ReadAllText(@"Process files\ApiCredentials\public key.txt"), File.ReadAllText(@"Process files\ApiCredentials\private key.txt"));
     
     public const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False";
     public const string DatabaseName = "Binance trading logs";
