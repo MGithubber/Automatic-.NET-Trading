@@ -113,7 +113,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     private readonly object PadLock = new object();
     private readonly WebDriverWait WebWait;
     private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
-    private async Task LockActionAsync(Action action)
+    private async Task LockedActionAsync(Action action)
     {
         try
         {
@@ -122,7 +122,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         }
         finally { this.Semaphore.Release(); }
     }
-    private async Task<T> LockFuncAsync<T>(Func<T> func)
+    private async Task<T> LockedFuncAsync<T>(Func<T> func)
     {
         try
         {
@@ -131,17 +131,18 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         }
         finally { this.Semaphore.Release(); }
     }
-
+    
     private readonly WebElement Chart;
 
+    
     private List<TVCandlestick> RegisteredTVCandlesticks = new List<TVCandlestick>();
     public TVCandlestick[] Candlesticks => this.RegisteredTVCandlesticks.ToArray();
 
     ////  ////  ////
-
+    
     private async Task WebpageZoomInAsync()
     {
-        lock (this.PadLock)
+        await this.LockedActionAsync(() =>
         {
             int width = this.Chart.Size.Width;
             int height = this.Chart.Size.Height;
@@ -150,21 +151,19 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             WebElement ZoomInButton = (WebElement)this.WebWait.Until(driver => driver.FindElement(this.ZoomInButton_Locator));
             for (int i = 0; i < 30; i++)
                 ZoomInButton.Click();
-        }
-        
-        await Task.Delay(0);
+        });
     }
     
     private async Task ExportAndReadChartDataAsync()
     {
-        lock (this.PadLock)
+        await this.LockedActionAsync(async () =>
         {
             string[] files_before = Directory.GetFiles(this.downloadsDirectory);
             try
             {
-                WebWait.Until(driver => driver.FindElement(ManageLayoutsButton_Locator)).Click();
-                WebWait.Until(driver => driver.FindElement(ExportChartDataButton_Locator)).Click();
-                WebWait.Until(driver => driver.FindElement(ExportChartDataConfirmButton_Locator)).Click();
+                this.WebWait.Until(driver => driver.FindElement(this.ManageLayoutsButton_Locator)).Click();
+                this.WebWait.Until(driver => driver.FindElement(this.ExportChartDataButton_Locator)).Click();
+                this.WebWait.Until(driver => driver.FindElement(this.ExportChartDataConfirmButton_Locator)).Click();
             }
             catch (Exception)
             {
@@ -173,8 +172,8 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
                 // this.ChromeDriver.MoveCursorToLocationAndClick(); Thread.Sleep(500); // export chart data
                 // this.ChromeDriver.MoveCursorToLocationAndClick(); Thread.Sleep(500); // export chart data confirmation
             }
-
-            Thread.Sleep(1000);
+            
+            await Task.Delay(1000);
 
             string[] files_after = Directory.GetFiles(this.downloadsDirectory);
             string[] new_files = files_after.Where(file_path => !files_before.Contains(file_path)).Where(file_path => file_path.EndsWith(".csv")).ToArray();
@@ -198,9 +197,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
 
             this.RegisteredTVCandlesticks.RemoveAt(this.RegisteredTVCandlesticks.Count - 1); // the incomplete (current) candlestick gets removed
             File.Delete(csv_file_path);
-        }
-        
-        await Task.Delay(0);
+        });
     }
 
     private TVCandlestick DataWindow_text_to_Candlestick(string data_window_text)
@@ -250,57 +247,53 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     }
     private async Task<TVCandlestick> GetLastCompleteCandlestickAsync()
     {
-        return await Task.Run(() =>
+        return await this.LockedFuncAsync(() =>
         {
-            lock (this.PadLock)
-            {
-                int width = this.Chart.Size.Width;
-                int height = this.Chart.Size.Height;
-
-                this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(-0.267 * width), Convert.ToInt32(0.128 * height));
-                return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
-            }
+            int width = this.Chart.Size.Width;
+            int height = this.Chart.Size.Height;
+            
+            this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(-0.267 * width), Convert.ToInt32(0.128 * height));
+            return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
         });
     }
     private async Task<TVCandlestick> GetUnfinishedCandlestickAsync()
     {
-        return await Task.Run(() =>
+        return await this.LockedFuncAsync(() =>
         {
-            lock (this.PadLock)
-            {
-                int width = this.Chart.Size.Width;
-                int height = this.Chart.Size.Height;
-                
-                this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(0.267 * width), Convert.ToInt32(0.128 * height));
-                return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
-            }
+            int width = this.Chart.Size.Width;
+            int height = this.Chart.Size.Height;
+
+            this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(0.267 * width), Convert.ToInt32(0.128 * height));
+            return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
         });
     }
     
     public async Task<TVCandlestick> WaitForNextCandleAsync()
     {
-        TVCandlestick LastCandle = await this.GetUnfinishedCandlestickAsync();
-        TVCandlestick LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
-        TimeSpan difference = LastCandle.Date - LastCompleteCandle.Date;
+        try
+        {
+            await this.Semaphore.WaitAsync();
+            
 
-        // holds the program here until a new candlestick has been completed
-        while (LastCandle.Date - LastCompleteCandle.Date == difference)
-            LastCandle = await this.GetUnfinishedCandlestickAsync();
+            TVCandlestick LastCandle = await this.GetUnfinishedCandlestickAsync();
+            TVCandlestick LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
+            TimeSpan difference = LastCandle.Date - LastCompleteCandle.Date;
 
-        LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
-        this.RegisteredTVCandlesticks.Add(LastCompleteCandle);
-        return LastCompleteCandle;
+            // holds the program here until a new candlestick has been completed
+            while (LastCandle.Date - LastCompleteCandle.Date == difference)
+                LastCandle = await this.GetUnfinishedCandlestickAsync();
+
+            LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
+            this.RegisteredTVCandlesticks.Add(LastCompleteCandle);
+            return LastCompleteCandle;
+        }
+        finally
+        {
+            this.Semaphore.Release();
+        }
     }
     public async Task<TVCandlestick> WaitForNextMatchingCandleAsync(params Predicate<TVCandlestick>[] matches)
     {
-        #region Valid input check
-        if (matches is null)
-            throw new ArgumentNullException(nameof(matches));
-
-        if (matches.Length == 0)
-            throw new ArgumentException($"No predicate was specified for {nameof(matches)}");
-        #endregion
-        
         bool OneMatches(TVCandlestick candle, IEnumerable<Predicate<TVCandlestick>> match_arr)
         {
             foreach (Predicate<TVCandlestick> match in matches)
@@ -309,24 +302,48 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             return false;
         }
 
-        TVCandlestick LastCompleteCandle;
-        do
+        try
         {
-            LastCompleteCandle = await WaitForNextCandleAsync();
-        } while (!OneMatches(LastCompleteCandle, matches));
+            await this.Semaphore.WaitAsync();
 
-        return LastCompleteCandle;
+
+            #region Valid input check
+            if (matches is null)
+                throw new ArgumentNullException(nameof(matches));
+
+            if (matches.Length == 0)
+                throw new ArgumentException($"No predicate was specified for {nameof(matches)}");
+            #endregion
+
+            TVCandlestick LastCompleteCandle;
+            do
+            {
+                LastCompleteCandle = await WaitForNextCandleAsync();
+            } while (!OneMatches(LastCompleteCandle, matches));
+
+            return LastCompleteCandle;
+        }
+        finally
+        {
+            this.Semaphore.Release();
+        }
     }
    
     public async Task<decimal> GetUnfinishedCandlestickOpenPriceAsync() => (await this.GetUnfinishedCandlestickAsync()).Open;
     
     public async Task RegisterAllCandlesticksAsync()
     {
-        await this.LockActionAsync(async () =>
+        try
         {
+            await this.Semaphore.WaitAsync();
+            
             await this.WebpageZoomInAsync();
             await this.ExportAndReadChartDataAsync();
-        });
+        }
+        finally
+        {
+            this.Semaphore.Release();
+        }
     }
 
     //// //// ////
