@@ -12,6 +12,7 @@ using CryptoExchange.Net.Objects;
 
 using OpenQA.Selenium;
 
+using System;
 using System.Data.SqlClient;
 using System.Text;
 using System.Xml.Serialization;
@@ -61,7 +62,7 @@ public partial class AutomaticTradingDotNetForm : Form
         }
         
         //// //// //// //// ////
-
+        
         TradingviewChartDataService TradingviewChartDataService = Create_TradingviewDataExtractor();
 
         //// ////
@@ -189,7 +190,7 @@ public partial class AutomaticTradingDotNetForm : Form
         });
         
         try { await this.MPoolTradingService.StartTradingAsync(); }
-        catch { throw; }
+        catch (Exception exception) { _ = Task.Run(() => MessageBox.Show(exception.ToString(), exception.GetType().Name, MessageBoxButtons.OK, MessageBoxIcon.Error)); }
         finally { this.MPoolTradingService.QuitChartDataService(); }
     }
     
