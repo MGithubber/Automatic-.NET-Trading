@@ -111,7 +111,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     ////  ////  ////
 
     private readonly WebDriverWait WebWait;
-    private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(2);
+    private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
     
     private readonly WebElement Chart;
 
