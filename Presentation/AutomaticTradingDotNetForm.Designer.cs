@@ -91,7 +91,7 @@
             this.LiveDetailsPanel.Controls.Add(this.NrActiveBotsTextBox);
             this.LiveDetailsPanel.Location = new System.Drawing.Point(12, 12);
             this.LiveDetailsPanel.Name = "LiveDetailsPanel";
-            this.LiveDetailsPanel.Size = new System.Drawing.Size(457, 205);
+            this.LiveDetailsPanel.Size = new System.Drawing.Size(400, 205);
             this.LiveDetailsPanel.TabIndex = 4;
             // 
             // AutomaticTradingDotNetForm

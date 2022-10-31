@@ -27,9 +27,6 @@ public partial class AutomaticTradingDotNetForm : Form
 
     //// //// //// //// //// //// //// ////
 
-    private const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False";
-    private const string DatabaseName = "Binance trading logs";
-
     private readonly object EventsPadLock = new object();
     private MPoolTradingService<TVCandlestick, SqlConnection>? MPoolTradingService;
     private async Task StartPoolTradingAsync()
@@ -175,8 +172,8 @@ public partial class AutomaticTradingDotNetForm : Form
         #endregion
 
         //// ////
-
-        SqlDatabaseConnectionFactory SqlDatabaseConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString, DatabaseName);
+        
+        SqlDatabaseConnectionFactory SqlDatabaseConnectionFactory = new SqlDatabaseConnectionFactory(ProgramIO.ConnectionString, ProgramIO.DatabaseName);
         TradingDataDbService TradingDataDbService = new TradingDataDbService(SqlDatabaseConnectionFactory);
         
         //// ////
@@ -195,13 +192,21 @@ public partial class AutomaticTradingDotNetForm : Form
         catch { throw; }
         finally { this.MPoolTradingService.QuitChartDataService(); }
     }
-
+    
     private Task? PoolTradingTask = null;
-    private void StartButton_Click(object sender, EventArgs e) => this.PoolTradingTask ??= this.StartPoolTradingAsync();
+    private void StartButton_Click(object sender, EventArgs e)
+    {
+        this.PoolTradingTask ??= this.StartPoolTradingAsync();
+        Task.Run(() =>
+        {
+            while (this.MPoolTradingService is null) continue;
+            this.NrActiveBotsTextBox.Text = this.MPoolTradingService.NrTradingStrategies.ToString();
+        });
+    }
 
 
     //// //// //// //// ////
-    
-    
+
+
     protected override void OnFormClosed(FormClosedEventArgs e) => this.MPoolTradingService?.QuitChartDataService();
 }

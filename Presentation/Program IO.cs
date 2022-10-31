@@ -34,4 +34,7 @@ internal static class ProgramIO
     /////
 
     public static readonly ApiCredentials BinanceApiCredentials = new ApiCredentials("IctW96tLRARy1J7EeW5BDvlxhihbF30uquSNEAoBm0otz1WsWZW8WgZ9wE8n9fsQ", "5bXCRQgUrqhPFEU4nAYaEMGN3EhrkaTvuKLy7diK22LRs8jLFdYdXL57eshUUyre");
+    
+    public const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False";
+    public const string DatabaseName = "Binance trading logs";
 }

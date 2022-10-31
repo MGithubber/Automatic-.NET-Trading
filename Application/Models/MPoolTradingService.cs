@@ -27,19 +27,20 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
 {
     private readonly IChartDataService<TCandlestick> ChartDataService = default!;
     private readonly ITradingDataDbService<TCandlestick> TradingDataDbService = default!;
-    private readonly List<ITradingStrategy<TCandlestick>>? Traders = null;
-
+    private readonly List<ITradingStrategy<TCandlestick>>? TradingStrategies = null;
+    public int NrTradingStrategies => (this.TradingStrategies is not null) ? this.TradingStrategies.Count : 0;
+    
     public MPoolTradingService(IChartDataService<TCandlestick> chartDataService, ITradingDataDbService<TCandlestick> tradingDataDbService, params ITradingStrategy<TCandlestick>[] traders)
     {
-        this.ChartDataService = this.ChartDataService ?? throw new ArgumentNullException(nameof(chartDataService));
-        this.TradingDataDbService = this.TradingDataDbService ?? throw new ArgumentNullException(nameof(tradingDataDbService));
-        this.Traders = this.Traders is not null ? traders.ToList() : throw new ArgumentNullException(nameof(traders));
+        this.ChartDataService = chartDataService ?? throw new ArgumentNullException(nameof(chartDataService));
+        this.TradingDataDbService = tradingDataDbService ?? throw new ArgumentNullException(nameof(tradingDataDbService));
+        this.TradingStrategies = traders is not null ? traders.ToList() : throw new ArgumentNullException(nameof(traders));
 
         #region Input error checks
         if (traders.Length == 0)
-            throw new ArgumentException(nameof(this.Traders));
-
-        IEnumerable<ICfdTradingApiService> contractTraders = this.Traders.Select(t => t.ContractTrader);
+            throw new ArgumentException(nameof(this.TradingStrategies));
+        
+        IEnumerable<ICfdTradingApiService> contractTraders = this.TradingStrategies.Select(strategy => strategy.ContractTrader);
         if (contractTraders.Count() != contractTraders.Distinct().Count())
             throw new ArgumentException();
         #endregion
@@ -48,7 +49,7 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
         
         this.OnNewCandlestickRegistered += (object? sender, TCandlestick e) => this.TradingDataDbService.AddCandlestick(e);
 
-        this.Traders.ForEach(trader =>
+        this.TradingStrategies.ForEach(trader =>
         {
             trader.OnPositionOpened += Trader_OnPositionOpened;
             trader.OnPositionClosed += Trader_OnPositionClosed;
@@ -59,14 +60,10 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
             .Where(order => order is not null)
             .ToList()
             .ForEach(order => this.TradingDataDbService.AddFuturesOrder(order, e.Key, out int _, out int _));
-
-            // // TO DO position saving in the database // //
         }
         void Trader_OnPositionClosed(object? sender, KeyValuePair<TCandlestick, BinanceFuturesOrder> e)
         {
             this.TradingDataDbService.AddFuturesOrder(e.Value, e.Key, out int _, out int _);
-            
-            // // TO DO position saving in the database // //
         }
     }
 
@@ -81,8 +78,8 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
         
     public async Task StartTradingAsync()
     {
-        if (this.Traders is null)
-            throw new InvalidOperationException($"Attempted to start trading with the when {nameof(this.Traders)} was NULL", new NullReferenceException($"{nameof(this.Traders)} was NULL"));
+        if (this.TradingStrategies is null)
+            throw new InvalidOperationException($"Attempted to start trading with the when {nameof(this.TradingStrategies)} was NULL", new NullReferenceException($"{nameof(this.TradingStrategies)} was NULL"));
 
         // //
         
@@ -97,8 +94,8 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
 
             this.OnNewCandlestickRegistered?.Invoke(this.ChartDataService, this.CompletedCandlesticks.Last());
             
-            this.Traders.ForEach(trader => trader.SendData((TCandlestick[])this.CompletedCandlesticks.Clone(), this.LastOpenPrice));
-            try { Parallel.Invoke(this.Traders.Select(trader => new Action(trader.MakeMove)).ToArray()); }
+            this.TradingStrategies.ForEach(trader => trader.SendData((TCandlestick[])this.CompletedCandlesticks.Clone(), this.LastOpenPrice));
+            try { Parallel.Invoke(this.TradingStrategies.Select(trader => new Action(trader.MakeMove)).ToArray()); }
             catch (Exception exception) { /*TO DO exception handling*/ }
             // previously in catch: Console.WriteLine($"==============================\n\nEXCEPTION AT Parallel.Invoke(traders)\n\n{exception}\n\n==============================");
         }
