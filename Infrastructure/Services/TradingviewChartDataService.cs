@@ -18,6 +18,7 @@ using AutomaticDotNETtrading.Infrastructure.Models;
 using OpenQA.Selenium.Interactions;
 using AutomaticDotNETtrading.Application.Interfaces.Services;
 using OpenQA.Selenium.DevTools.V104.Runtime;
+using AutomaticDotNETtrading.Domain.Models;
 
 namespace AutomaticDotNETtrading.Infrastructure.Services;
 
@@ -174,6 +175,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             {
                 csv.Context.RegisterClassMap<CsvTVCandlestickTradingviewStyleMap>();
                 this.RegisteredTVCandlesticks = csv.GetRecords<TVCandlestick>().ToList();
+                this.RegisteredTVCandlesticks.ForEach(c => c.CurrencyPair = new CurrencyPair("ETH", "BUSD"));
             }
 
             this.RegisteredTVCandlesticks.RemoveAt(this.RegisteredTVCandlesticks.Count - 1); // the incomplete (current) candlestick gets removed
@@ -208,6 +210,8 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
 
         return new TVCandlestick
         {
+            CurrencyPair = new CurrencyPair("ETH", "BUSD"),
+            
             Date = DateTime.Parse(data_window_lines[1], CultureInfo.InvariantCulture),
 
             Open = decimal.Parse(data_window_lines[2], CultureInfo.InvariantCulture),

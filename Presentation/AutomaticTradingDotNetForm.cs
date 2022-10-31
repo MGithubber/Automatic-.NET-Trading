@@ -182,11 +182,15 @@ public partial class AutomaticTradingDotNetForm : Form
         this.MPoolTradingService = new(TradingviewChartDataService, TradingDataDbService, LuxAlgoPsarMethodsList.ToArray());
         this.MPoolTradingService.OnNewCandlestickRegistered += new EventHandler<TVCandlestick>((sender, e) =>
         {
-            Task.Run(() =>
+            lock (this.EventsPadLock)
             {
-                _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
-                string newcandlestring = $"{sender.GetType().Name} registered candlestick at date {e.Date:dd/MM/yyyy HH:mm}, {nameof(e.LuxAlgoSignal)}=={e.LuxAlgoSignal}";
-            });
+                Task.Run(() =>
+                {
+                    _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
+                    string newcandlestring = $"{sender.GetType().Name} registered candlestick at date {e.Date:dd/MM/yyyy HH:mm}, {nameof(e.LuxAlgoSignal)}=={e.LuxAlgoSignal}";
+                    this.OutputTextBox.Text += newcandlestring.ReplaceLineEndings();
+                });
+            }
         });
         
         try { await this.MPoolTradingService.StartTradingAsync(); }
@@ -204,10 +208,14 @@ public partial class AutomaticTradingDotNetForm : Form
             this.NrActiveBotsTextBox.Text = this.MPoolTradingService.NrTradingStrategies.ToString();
         });
     }
-
+    
 
     //// //// //// //// ////
 
 
-    protected override void OnFormClosed(FormClosedEventArgs e) => this.MPoolTradingService?.QuitChartDataService();
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        this.MPoolTradingService?.QuitChartDataService();
+        base.OnFormClosed(e);
+    }
 }

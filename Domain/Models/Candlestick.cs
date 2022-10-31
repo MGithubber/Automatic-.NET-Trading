@@ -10,14 +10,14 @@ namespace AutomaticDotNETtrading.Domain.Models;
 
 public class Candlestick : IQuote, ICloneable
 {
-    public CurrencyPair CurrencyPair { get; init; } = default!;
+    public CurrencyPair CurrencyPair { get; set; } = default!;
 
-    public DateTime Date { get; init; }
-    public decimal Open { get; init; }
-    public decimal High { get; init; }
-    public decimal Low { get; init; }
-    public decimal Close { get; init; }
-    public decimal Volume { get; init; }
+    public DateTime Date { get; set; }
+    public decimal Open { get; set; }
+    public decimal High { get; set; }
+    public decimal Low { get; set; }
+    public decimal Close { get; set; }
+    public decimal Volume { get; set; }
     
 
     // Directional information
