@@ -91,11 +91,14 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
             this.CompletedCandlesticks = this.ChartDataService.Candlesticks;
             this.LastOpenPrice = await this.ChartDataService.GetUnfinishedCandlestickOpenPriceAsync();
 
-
+            
             this.OnNewCandlestickRegistered?.Invoke(this.ChartDataService, this.CompletedCandlesticks.Last());
             
-            this.TradingStrategies.ForEach(trader => trader.SendData((TCandlestick[])this.CompletedCandlesticks.Clone(), this.LastOpenPrice));
-            try { Parallel.Invoke(this.TradingStrategies.Select(trader => new Action(trader.MakeMove)).ToArray()); }
+            try
+            {
+                this.TradingStrategies.ForEach(trader => trader.SendData((TCandlestick[])this.CompletedCandlesticks.Clone(), this.LastOpenPrice));
+                Parallel.Invoke(this.TradingStrategies.Select(trader => new Action(trader.MakeMove)).ToArray());
+            }
             catch (Exception exception) { /*TO DO exception handling*/ }
             // previously in catch: Console.WriteLine($"==============================\n\nEXCEPTION AT Parallel.Invoke(traders)\n\n{exception}\n\n==============================");
         }
