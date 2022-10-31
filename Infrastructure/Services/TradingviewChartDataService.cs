@@ -50,7 +50,7 @@ internal static class IWebDriverExtensions
 /// <summary>
 /// Represents an immutable object providing methods for extracting chart data from https://www.tradingview.com using google chrome
 /// </summary>
-public class TradingviewChartDataService : IChartDataService<TVCandlestick>
+public class TradingviewChartDataService : IChartDataService<TVCandlestick>, IDisposable
 {
     private readonly ChromeOptions ChromeOptions;
     private readonly ChromeDriver ChromeDriver;
@@ -337,7 +337,6 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         finally
         {
             this.Semaphore.Release();
-            this.Semaphore.Dispose();
         }
     }
     public void Quit()
@@ -350,7 +349,16 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         finally
         {
             this.Semaphore.Release();
-            this.Semaphore.Dispose();
         }
+    }
+
+
+    //// //// ////
+    
+
+    public void Dispose()
+    {
+        this.RegisteredTVCandlesticks.Clear();
+        this.Semaphore.Dispose();
     }
 }
