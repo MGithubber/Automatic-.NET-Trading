@@ -333,27 +333,13 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     
     public void Close()
     {
-        try
-        {
-            this.Semaphore.Wait();
-            this.ChromeDriver.Close();
-        }
-        finally
-        {
-            this.Semaphore.Release();
-        }
+        try { this.ChromeDriver.Close(); }
+        catch { }
     }
     public void Quit()
     {
-        try
-        {
-            this.Semaphore.Wait();
-            this.ChromeDriver.Quit();
-        }
-        finally
-        {
-            this.Semaphore.Release();
-        }
+        try { this.ChromeDriver.Quit(); }
+        catch { }
     }
 
 
