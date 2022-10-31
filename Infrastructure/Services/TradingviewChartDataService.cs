@@ -199,7 +199,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             File.Delete(csv_file_path);
         });
     }
-
+    
     private TVCandlestick DataWindow_text_to_Candlestick(string data_window_text)
     {
         lock (this.PadLock)
