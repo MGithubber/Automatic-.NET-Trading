@@ -111,7 +111,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
 
     ////  ////  ////
 
-    private readonly WebDriverWait WebWait;
+    internal readonly WebDriverWait WebWait;
     private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
     
     private readonly WebElement Chart;
@@ -135,7 +135,6 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
                 ZoomInButton.Click();
         });
     }
-    
     private async Task ExportAndReadChartDataAsync()
     {
         await Task.Run(() =>
@@ -182,10 +181,12 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             File.Delete(csv_file_path);
         });
     }
+
     
-    private TVCandlestick DataWindow_text_to_Candlestick(string data_window_text)
+    internal string DataWindowText;
+    internal TVCandlestick Convert_DataWindowText_ToCandlestick()
     {
-        List<string> data_window_lines = data_window_text.Replace("\r\n", "\n").Split('\n').ToList();
+        List<string> data_window_lines = this.DataWindowText.Replace("\r\n", "\n").Split('\n').ToList();
 
         //////
 
@@ -211,7 +212,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         return new TVCandlestick
         {
             CurrencyPair = new CurrencyPair("ETH", "BUSD"),
-            
+
             Date = DateTime.Parse(data_window_lines[1], CultureInfo.InvariantCulture),
 
             Open = decimal.Parse(data_window_lines[2], CultureInfo.InvariantCulture),
@@ -227,7 +228,14 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             ExitSell = double.Parse(data_window_lines[11].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture)
         };
     }
-    private string ReadDataWindow() => this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text;
+    internal TVCandlestick DataWindow_to_Candlestick()
+    {
+        this.DataWindowText = this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator).Text);
+        // return this.WebWait.Until(_ => this.Convert_DataWindowText_ToCandlestick());
+        return this.Convert_DataWindowText_ToCandlestick();
+    }
+
+
     private async Task<TVCandlestick> GetLastCompleteCandlestickAsync()
     {
         return await Task.Run(() =>
@@ -236,7 +244,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             int height = this.Chart.Size.Height;
 
             this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(-0.267 * width), Convert.ToInt32(0.128 * height));
-            return this.DataWindow_text_to_Candlestick(this.ReadDataWindow());
+            return this.DataWindow_to_Candlestick();
         });
     }
     private async Task<TVCandlestick> GetUnfinishedCandlestickAsync()
@@ -247,7 +255,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             int height = this.Chart.Size.Height;
 
             this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(0.267 * width), Convert.ToInt32(0.128 * height));
-            return this.DataWindow_text_to_Candlestick(this.ReadDataWindow());
+            return this.DataWindow_to_Candlestick();
         });
     }
     
