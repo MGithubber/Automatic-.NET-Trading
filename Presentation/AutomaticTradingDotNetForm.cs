@@ -199,14 +199,15 @@ public partial class AutomaticTradingDotNetForm : Form
     }
     
     private Task? PoolTradingTask = null;
+    private Task? ShowActiveBotsTask = null;
     private void StartButton_Click(object sender, EventArgs e)
     {
         this.PoolTradingTask ??= this.StartPoolTradingAsync();
-        Task.Run(() =>
+        this.ShowActiveBotsTask ??= Task.Run(() =>
         {
             while (this.MPoolTradingService is null) continue;
             this.NrActiveBotsTextBox.Text = this.MPoolTradingService.NrTradingStrategies.ToString();
-        });
+        }); 
     }
     
 
