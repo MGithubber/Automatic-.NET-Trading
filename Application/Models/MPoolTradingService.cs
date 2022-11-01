@@ -28,7 +28,7 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
     private readonly IChartDataService<TCandlestick> ChartDataService = default!;
     private readonly ITradingDataDbService<TCandlestick> TradingDataDbService = default!;
     private readonly List<ITradingStrategy<TCandlestick>>? TradingStrategies = null;
-    public int NrTradingStrategies => (this.TradingStrategies is not null) ? this.TradingStrategies.Count : 0;
+    public int NrTradingStrategies => this.TradingStrategies!.Count;
     
     public MPoolTradingService(IChartDataService<TCandlestick> chartDataService, ITradingDataDbService<TCandlestick> tradingDataDbService, params ITradingStrategy<TCandlestick>[] traders)
     {
