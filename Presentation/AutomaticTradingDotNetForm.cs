@@ -28,7 +28,6 @@ public partial class AutomaticTradingDotNetForm : Form
 
     //// //// //// //// //// //// //// ////
 
-    private readonly object EventsPadLock = new object();
     private MPoolTradingService<TVCandlestick, SqlConnection>? MPoolTradingService;
     private async Task StartPoolTradingAsync()
     {
@@ -90,84 +89,72 @@ public partial class AutomaticTradingDotNetForm : Form
         #region LuxAlgoAndPsarTradingStrategy events
         void LuxAlgoPsar_OnPositionOpened(object? sender, KeyValuePair<TVCandlestick, FuturesPosition> e)
         {
-            lock (this.EventsPadLock)
+            Task.Run(() =>
             {
-                Task.Run(() =>
-                {
-                    _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
-                    
-                    BinanceFuturesOrder EntryOrder = e.Value.EntryOrder;
-                    BinanceFuturesOrder? StopLossOrder = e.Value.StopLossOrder;
-                    string SymbolName = EntryOrder.Symbol;
-                    string Side = EntryOrder.Side.ToString().ToUpper();
+                _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
 
-                    StringBuilder builder = new StringBuilder();
-                    builder.AppendLine($"====  ====  ====  ====");
-                    builder.AppendLine($"{sender.GetType().Name}: POSITION OPENED on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
-                    builder.AppendLine($"{Side} order placed on {SymbolName}");
-                    builder.AppendLine($"entry price == ${EntryOrder.AvgPrice}");
-                    builder.AppendLine($"quantity == {EntryOrder.Quantity}");
-                    builder.AppendLine($"stop loss price == ${StopLossOrder.StopPrice}");
-                    builder.AppendLine($"====  ====  ====  ====");
-                    this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
-                });
-            }
+                BinanceFuturesOrder EntryOrder = e.Value.EntryOrder;
+                BinanceFuturesOrder? StopLossOrder = e.Value.StopLossOrder;
+                string SymbolName = EntryOrder.Symbol;
+                string Side = EntryOrder.Side.ToString().ToUpper();
+
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine($"====  ====  ====  ====");
+                builder.AppendLine($"{sender.GetType().Name}: POSITION OPENED on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
+                builder.AppendLine($"{Side} order placed on {SymbolName}");
+                builder.AppendLine($"entry price == ${EntryOrder.AvgPrice}");
+                builder.AppendLine($"quantity == {EntryOrder.Quantity}");
+                builder.AppendLine($"stop loss price == ${StopLossOrder.StopPrice}");
+                builder.AppendLine($"====  ====  ====  ====");
+                this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
+            });
         }
         void LuxAlgoPsar_OnStopLossUpdated(object? sender, KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder> e)
         {
-            lock (this.EventsPadLock)
+            Task.Run(() =>
             {
-                Task.Run(() =>
-                {
-                    _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
+                _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
 
-                    BinanceFuturesPlacedOrder StopLossOrder = e.Value;
-                    string SymbolName = StopLossOrder.Symbol;
-                    string Side = StopLossOrder.Side.ToString().ToUpper();
+                BinanceFuturesPlacedOrder StopLossOrder = e.Value;
+                string SymbolName = StopLossOrder.Symbol;
+                string Side = StopLossOrder.Side.ToString().ToUpper();
 
-                    StringBuilder builder = new StringBuilder();
-                    builder.AppendLine($"{sender.GetType().Name}: The stop loss has been updated on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
-                    builder.AppendLine($"{Side} order placed on {SymbolName} on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
-                    builder.AppendLine($"stop loss price == ${StopLossOrder.StopPrice}");
-                    this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
-                });
-            }
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine($"{sender.GetType().Name}: The stop loss has been updated on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
+                builder.AppendLine($"{Side} order placed on {SymbolName} on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
+                builder.AppendLine($"stop loss price == ${StopLossOrder.StopPrice}");
+                this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
+            });
         }
         void LuxAlgoPsar_OnStopOutDetected(object? sender, TVCandlestick e)
         {
-            lock (this.EventsPadLock)
+            Task.Run(() =>
             {
-                Task.Run(() =>
-                {
-                    _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
+                _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
 
-                    StringBuilder builder = new StringBuilder();
-                    builder.AppendLine($"{sender.GetType().Name}: STOP-OUT detected on candlestick with date {e.Date:dd/MM/yyyy HH:mm}");
-                    this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
-                });
-            }
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine($"{sender.GetType().Name}: STOP-OUT detected on candlestick with date {e.Date:dd/MM/yyyy HH:mm}");
+                this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
+            });
         }
         void LuxAlgoPsar_OnPositionClosed(object? sender, KeyValuePair<TVCandlestick, BinanceFuturesOrder> e)
         {
-            lock (this.EventsPadLock)
+            Task.Run(() =>
             {
-                Task.Run(() =>
-                {
-                    _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
-                    
-                    BinanceFuturesOrder CloseOrder = e.Value;
-                    string SymbolName = CloseOrder.Symbol;
-                    string Side = CloseOrder.Side.ToString().ToUpper();
+                _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
 
-                    StringBuilder builder = new StringBuilder();
-                    builder.AppendLine($"====  ====  ====  ====");
-                    builder.AppendLine($"{sender.GetType().Name}: POSITION CLOSED on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
-                    builder.AppendLine($"{Side} order placed on {SymbolName} on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
-                    builder.AppendLine($"quantity == ${CloseOrder.Quantity}");
-                    builder.AppendLine($"====  ====  ====  ====");
-                    this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
-                });
-            }
+                BinanceFuturesOrder CloseOrder = e.Value;
+                string SymbolName = CloseOrder.Symbol;
+                string Side = CloseOrder.Side.ToString().ToUpper();
+
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine($"====  ====  ====  ====");
+                builder.AppendLine($"{sender.GetType().Name}: POSITION CLOSED on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
+                builder.AppendLine($"{Side} order placed on {SymbolName} on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
+                builder.AppendLine($"quantity == ${CloseOrder.Quantity}");
+                builder.AppendLine($"====  ====  ====  ====");
+                this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
+            });
         }
         #endregion
         #endregion
@@ -182,15 +169,12 @@ public partial class AutomaticTradingDotNetForm : Form
         this.MPoolTradingService = new(TradingviewChartDataService, TradingDataDbService, LuxAlgoPsarMethodsList.ToArray());
         this.MPoolTradingService.OnNewCandlestickRegistered += new EventHandler<TVCandlestick>((sender, e) =>
         {
-            lock (this.EventsPadLock)
+            Task.Run(() =>
             {
-                Task.Run(() =>
-                {
-                    _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
-                    string newcandlestring = $"{sender.GetType().Name} registered candlestick at date {e.Date:dd/MM/yyyy HH:mm}, {nameof(e.LuxAlgoSignal)}=={e.LuxAlgoSignal}";
-                    this.OutputTextBox.Text += newcandlestring.ReplaceLineEndings();
-                });
-            }
+                _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
+                string newcandlestring = $"{sender.GetType().Name} registered candlestick at date {e.Date:dd/MM/yyyy HH:mm}, {nameof(e.LuxAlgoSignal)}=={e.LuxAlgoSignal}";
+                this.OutputTextBox.Text += newcandlestring.ReplaceLineEndings();
+            });
         });
         
         try { await this.MPoolTradingService.StartTradingAsync(); }
