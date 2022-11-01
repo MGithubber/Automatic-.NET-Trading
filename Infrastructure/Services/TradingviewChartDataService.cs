@@ -71,7 +71,8 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     private readonly By ExportChartDataButton_Locator;
     private readonly By ExportChartDataConfirmButton_Locator;
     #endregion
-
+    
+    internal TradingviewChartDataService() { }
     public TradingviewChartDataService(string chromeDriverDirectory, string userDataDirectory, string downloadsDirectory, By Chart_Locator, By DataWindow_Locator, By ZoomInButton_Locator, By ZoomOutButton_Locator, By ScrollLeftButton_Locator, By ScrollRightButton_Locator, By ResetChartButton_Locator, By ManageLayoutsButton_Locator, By ExportChartDataButton_Locator, By ExportChartDataConfirmButton_Locator)
     {
         this.downloadsDirectory = downloadsDirectory;
@@ -228,13 +229,13 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             ExitSell = double.Parse(data_window_lines[11].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture)
         };
     }
-    internal TVCandlestick DataWindow_to_Candlestick()
+    private TVCandlestick DataWindow_to_Candlestick()
     {
         this.DataWindowText = this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator).Text);
         // return this.WebWait.Until(_ => this.Convert_DataWindowText_ToCandlestick());
         return this.Convert_DataWindowText_ToCandlestick();
     }
-
+    
 
     private async Task<TVCandlestick> GetLastCompleteCandlestickAsync()
     {
