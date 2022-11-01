@@ -209,7 +209,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         }
 
         //////
-
+        
         return new TVCandlestick
         {
             CurrencyPair = new CurrencyPair("ETH", "BUSD"),

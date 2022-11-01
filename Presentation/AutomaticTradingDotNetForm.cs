@@ -172,7 +172,7 @@ public partial class AutomaticTradingDotNetForm : Form
             Task.Run(() =>
             {
                 _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
-                string newcandlestring = $"{sender.GetType().Name} registered candlestick at date {e.Date:dd/MM/yyyy HH:mm}, {nameof(e.LuxAlgoSignal)}=={e.LuxAlgoSignal}";
+                string newcandlestring = $"{sender.GetType().Name} registered candlestick at date {e.Date:dd/MM/yyyy HH:mm}, {nameof(e.LuxAlgoSignal)}=={e.LuxAlgoSignal}\n";
                 this.OutputTextBox.Text += newcandlestring.ReplaceLineEndings();
             });
         });
