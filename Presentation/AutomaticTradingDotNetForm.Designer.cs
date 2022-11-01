@@ -40,7 +40,7 @@
             // 
             this.OutputTextBox.BackColor = System.Drawing.Color.Black;
             this.OutputTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.OutputTextBox.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.OutputTextBox.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.OutputTextBox.ForeColor = System.Drawing.SystemColors.Control;
             this.OutputTextBox.Location = new System.Drawing.Point(12, 223);
             this.OutputTextBox.Multiline = true;
