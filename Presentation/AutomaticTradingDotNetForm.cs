@@ -106,7 +106,7 @@ public partial class AutomaticTradingDotNetForm : Form
                 builder.AppendLine($"quantity == {EntryOrder.Quantity}");
                 builder.AppendLine($"stop loss price == ${StopLossOrder.StopPrice}");
                 builder.AppendLine($"====  ====  ====  ====");
-                this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
+                this.OutputTextBox.BeginInvoke(() => this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings());
             });
         }
         void LuxAlgoPsar_OnStopLossUpdated(object? sender, KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder> e)
@@ -123,7 +123,7 @@ public partial class AutomaticTradingDotNetForm : Form
                 builder.AppendLine($"{sender.GetType().Name}: The stop loss has been updated on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
                 builder.AppendLine($"{Side} order placed on {SymbolName} on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
                 builder.AppendLine($"stop loss price == ${StopLossOrder.StopPrice}");
-                this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
+                this.OutputTextBox.BeginInvoke(() => this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings());
             });
         }
         void LuxAlgoPsar_OnStopOutDetected(object? sender, TVCandlestick e)
@@ -134,7 +134,7 @@ public partial class AutomaticTradingDotNetForm : Form
 
                 StringBuilder builder = new StringBuilder();
                 builder.AppendLine($"{sender.GetType().Name}: STOP-OUT detected on candlestick with date {e.Date:dd/MM/yyyy HH:mm}");
-                this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
+                this.OutputTextBox.BeginInvoke(() => this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings());
             });
         }
         void LuxAlgoPsar_OnPositionClosed(object? sender, KeyValuePair<TVCandlestick, BinanceFuturesOrder> e)
@@ -153,7 +153,7 @@ public partial class AutomaticTradingDotNetForm : Form
                 builder.AppendLine($"{Side} order placed on {SymbolName} on candlestick with date {e.Key.Date:dd/MM/yyyy HH:mm}");
                 builder.AppendLine($"quantity == ${CloseOrder.Quantity}");
                 builder.AppendLine($"====  ====  ====  ====");
-                this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings();
+                this.OutputTextBox.BeginInvoke(() => this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings());
             });
         }
         #endregion
@@ -173,7 +173,7 @@ public partial class AutomaticTradingDotNetForm : Form
             {
                 _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
                 string newcandlestring = $"{sender.GetType().Name} registered candlestick at date {e.Date:dd/MM/yyyy HH:mm}, {nameof(e.LuxAlgoSignal)}=={e.LuxAlgoSignal}\n";
-                this.OutputTextBox.Text += newcandlestring.ReplaceLineEndings();
+                this.OutputTextBox.BeginInvoke(() => this.OutputTextBox.Text += newcandlestring.ReplaceLineEndings());
             });
         });
         
@@ -190,7 +190,7 @@ public partial class AutomaticTradingDotNetForm : Form
         this.ShowActiveBotsTask ??= Task.Run(() =>
         {
             while (this.MPoolTradingService is null) continue;
-            this.NrActiveBotsTextBox.Text = this.MPoolTradingService.NrTradingStrategies.ToString();
+            this.NrActiveBotsTextBox.BeginInvoke(() => this.NrActiveBotsTextBox.Text = this.MPoolTradingService.NrTradingStrategies.ToString());
         }); 
     }
     

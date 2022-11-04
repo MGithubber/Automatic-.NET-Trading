@@ -75,10 +75,10 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandles
     protected async Task OpenFuturesPosition(OrderSide OrderSide, decimal? StopLoss_price = null, decimal? TakeProfit_price = null)
     {
         CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>> CallResult = await this.ContractTrader.OpenPositionAtMarketPriceAsync(OrderSide, decimal.MaxValue, StopLoss_price, TakeProfit_price);
-
+        
         if (this.ContractTrader.Position is null)
             throw new Exception($"Failed to open a futures order position on {nameof(OrderSide)} {OrderSide}", new NullReferenceException(nameof(this.ContractTrader.Position)));
-
+        
         this.OnPositionOpened_Invoke(this, new KeyValuePair<TVCandlestick, FuturesPosition>(this.LastCandle, this.ContractTrader.Position));
     }
     protected async Task CloseFuturesPosition()
@@ -113,4 +113,3 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandles
     }
     public abstract void MakeMove();
 }
-    

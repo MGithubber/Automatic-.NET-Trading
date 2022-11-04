@@ -93,12 +93,12 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
             decimal BaseQuantity;
             decimal equityBUSD = decimal.MinusOne;
             decimal CurrentPrice = decimal.MinusOne;
-            
+
             Task<decimal> GetCurrentPrice_Task = this.GetCurrentPriceAsync();
             equityBUSD = (MarginBUSD == decimal.MaxValue) ? await this.GetEquityAsync() : MarginBUSD;
             CurrentPrice = await GetCurrentPrice_Task;
 
-            BaseQuantity = Math.Round(MarginBUSD * this.Leverage / CurrentPrice, 2, MidpointRounding.ToZero);
+            BaseQuantity = Math.Round(equityBUSD * this.Leverage / CurrentPrice, 2, MidpointRounding.ToZero);
 
             return (BaseQuantity, CurrentPrice);
         }
