@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A2A556FD
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure.Integration.Testing", "Infrastructure.Integration.Testing\Infrastructure.Integration.Testing.csproj", "{89A5000D-3057-4870-8336-3A53E44E6DC5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain.Integration.Testing", "Domain.Integration.Testing\Domain.Integration.Testing.csproj", "{A62DBBEB-65E0-4AA0-9E30-796894221EC8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain.Tests", "Domain.Integration.Testing\Domain.Tests.csproj", "{A62DBBEB-65E0-4AA0-9E30-796894221EC8}"
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Trading Data Logs", "Trading Data Logs\Trading Data Logs.sqlproj", "{3021AF94-F39D-4364-B03B-3A17975F2803}"
 EndProject
