@@ -13,7 +13,7 @@ public class SqlDatabaseConnectionFactory : IDatabaseConnectionFactory<SqlConnec
 {
     private readonly string ConnectionString;
     public readonly string DatabaseName;
-
+    
     public SqlDatabaseConnectionFactory(string ConnectionString, string DatabaseName)
     {
         this.ConnectionString = ConnectionString;
@@ -21,7 +21,7 @@ public class SqlDatabaseConnectionFactory : IDatabaseConnectionFactory<SqlConnec
     }
 
     //////////
-    
+        
     public SqlConnection CreateConnection()
     {
         try

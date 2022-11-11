@@ -17,8 +17,9 @@ using CsvHelper.Configuration;
 using AutomaticDotNETtrading.Infrastructure.Models;
 using OpenQA.Selenium.Interactions;
 using AutomaticDotNETtrading.Application.Interfaces.Services;
-using OpenQA.Selenium.DevTools.V104.Runtime;
 using AutomaticDotNETtrading.Domain.Models;
+using System.Reflection;
+using System.Text;
 
 namespace AutomaticDotNETtrading.Infrastructure.Services;
 
@@ -182,15 +183,12 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             File.Delete(csv_file_path);
         });
     }
-
     
-    internal string DataWindowText;
-    internal TVCandlestick Convert_DataWindowText_ToCandlestick()
+    private TVCandlestick DataWindow_text_to_Candlestick(string data_window_text)
     {
-        List<string> data_window_lines = this.DataWindowText.Replace("\r\n", "\n").Split('\n').ToList();
-
-        //////
-
+        List<string> data_window_lines = data_window_text.Replace("\r\n", "\n").Split('\n').ToList();
+        
+        #region #region Edit data_window_lines
         string[] desired_strings = new string[] { "Date", "Time", "Open", "Close", "High", "Low", "Buy", "Strong Buy", "Sell", "Strong Sell", "Exit Buy", "Exit Sell" };
 
         data_window_lines.RemoveAll(str =>
@@ -206,10 +204,31 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         {
             int index = data_window_lines.FindIndex(item => item.StartsWith(desired_str)); // find index of desired string in list
             data_window_lines[index] = data_window_lines[index].Replace(desired_str, string.Empty);
-        }
+        } 
+        #endregion
 
-        //////
-        
+        #region MOCKING
+        //DateTime dateTime = DateTime.Parse(data_window_lines[1], CultureInfo.InvariantCulture);
+        //return new TVCandlestick
+        //{
+        //    CurrencyPair = new CurrencyPair("ETH", "BUSD"),
+
+        //    Date = dateTime,
+
+        //    Open = decimal.Parse(data_window_lines[2], CultureInfo.InvariantCulture),
+        //    High = decimal.Parse(data_window_lines[3], CultureInfo.InvariantCulture),
+        //    Low = decimal.Parse(data_window_lines[4], CultureInfo.InvariantCulture),
+        //    Close = decimal.Parse(data_window_lines[5], CultureInfo.InvariantCulture),
+
+        //    Buy = true, // dateTime.Minute % 5 == 0 && dateTime.Minute % 10 != 0
+        //    StrongBuy = false,
+        //    Sell = false, // dateTime.Minute % 10 == 0
+        //    StrongSell = false,
+        //    ExitBuy = double.NaN,
+        //    ExitSell = double.NaN
+        //};
+        #endregion
+
         return new TVCandlestick
         {
             CurrencyPair = new CurrencyPair("ETH", "BUSD"),
@@ -229,34 +248,64 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             ExitSell = double.Parse(data_window_lines[11].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture)
         };
     }
-    private TVCandlestick DataWindow_to_Candlestick()
-    {
-        this.DataWindowText = this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator).Text);
-        // return this.WebWait.Until(_ => this.Convert_DataWindowText_ToCandlestick());
-        return this.Convert_DataWindowText_ToCandlestick();
-    }
-    
-
     private async Task<TVCandlestick> GetLastCompleteCandlestickAsync()
     {
         return await Task.Run(() =>
         {
-            int width = this.Chart.Size.Width;
-            int height = this.Chart.Size.Height;
+            int maxAttempts = 50;
+            for (int i = 0; i < maxAttempts; i++)
+            {
+                try
+                {
+                    int width = this.Chart.Size.Width;
+                    int height = this.Chart.Size.Height;
 
-            this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(-0.267 * width), Convert.ToInt32(0.128 * height));
-            return this.DataWindow_to_Candlestick();
+                    this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(-0.267 * width), Convert.ToInt32(0.128 * height));
+                    return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
+                }
+                catch (Exception)
+                {
+                    if (i > 0 && i % 5 == 0) // lazy circuit breaker implementation
+                        Thread.Sleep(1000);
+                }
+            }
+
+            #region Build exception message and throw
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine($"Could not get exeecute method \"{MethodBase.GetCurrentMethod().Name}\"");
+            builder.AppendLine($"Exceeded {maxAttempts} attempts");
+            throw new Exception(builder.ToString());
+            #endregion
         });
     }
     private async Task<TVCandlestick> GetUnfinishedCandlestickAsync()
     {
         return await Task.Run(() =>
         {
-            int width = this.Chart.Size.Width;
-            int height = this.Chart.Size.Height;
+            int maxAttempts = 50;
+            for (int i = 0; i < maxAttempts; i++)
+            {
+                try
+                {
+                    int width = this.Chart.Size.Width;
+                    int height = this.Chart.Size.Height;
 
-            this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(0.267 * width), Convert.ToInt32(0.128 * height));
-            return this.DataWindow_to_Candlestick();
+                    this.ChromeDriver.MoveCursorToLocationOnElement(this.Chart, Convert.ToInt32(0.267 * width), Convert.ToInt32(0.128 * height));
+                    return this.DataWindow_text_to_Candlestick(this.WebWait.Until(driver => driver.FindElement(this.DataWindow_Locator)).Text);
+                }
+                catch (Exception)
+                {
+                    if (i > 0 && i % 5 == 0) // lazy circuit breaker implementation
+                        Thread.Sleep(1000);
+                }
+            }
+            
+            #region Build exception message and throw
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine($"Could not get exeecute method \"{MethodBase.GetCurrentMethod().Name}\"");
+            builder.AppendLine($"Exceeded {maxAttempts} attempts");
+            throw new Exception(builder.ToString());
+            #endregion
         });
     }
     

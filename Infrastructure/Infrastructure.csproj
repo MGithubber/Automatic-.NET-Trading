@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="29.0.0" />
-    <PackageReference Include="Selenium.WebDriver" Version="4.5.1" />
+    <PackageReference Include="CsvHelper" Version="30.0.0" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.6.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.4" />
   </ItemGroup>
 
@@ -19,7 +19,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="$(MSBuildProjectName).Integration.Testing"/>
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Integration.Testing" />
 	</ItemGroup>
 	
 </Project>
