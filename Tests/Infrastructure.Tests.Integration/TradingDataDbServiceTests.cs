@@ -64,27 +64,27 @@ public class TradingDataDbServiceTests
     #region private methods
     private TVCandlestick GetFakeCandlestick()
     {
-        TVCandlestick fake = CandlesticksFaker.Generate();
-        CleanupCandlesticks.Add(fake);
+        TVCandlestick fake = this.CandlesticksFaker.Generate();
+        this.CleanupCandlesticks.Add(fake);
         return fake;
     }
     private List<TVCandlestick> GetFakeCandlesticks(int min, int max)
     {
-        List<TVCandlestick> fakes = CandlesticksFaker.GenerateBetween(min, max);
-        fakes.ForEach(fake => CleanupCandlesticks.Add(fake));
+        List<TVCandlestick> fakes = this.CandlesticksFaker.GenerateBetween(min, max);
+        fakes.ForEach(fake => this.CleanupCandlesticks.Add(fake));
         return fakes;
     }
 
     private BinanceFuturesOrder GetFakeFuturesOrder()
     {
-        BinanceFuturesOrder fake = FuturesOrdersFaker.Generate();
-        CleanupFuturesOrders.Add(fake);
+        BinanceFuturesOrder fake = this.FuturesOrdersFaker.Generate();
+        this.CleanupFuturesOrders.Add(fake);
         return fake;
     }
     private List<BinanceFuturesOrder> GetFakeFuturesOrders(int min, int max)
     {
-        List<BinanceFuturesOrder> fakes = FuturesOrdersFaker.GenerateBetween(min, max);
-        fakes.ForEach(fake => CleanupFuturesOrders.Add(fake));
+        List<BinanceFuturesOrder> fakes = this.FuturesOrdersFaker.GenerateBetween(min, max);
+        fakes.ForEach(fake => this.CleanupFuturesOrders.Add(fake));
         return fakes;
     }
     #endregion
@@ -100,7 +100,7 @@ public class TradingDataDbServiceTests
     {
         // Arrange
         SqlConnection connection = default!;
-        Action createConnection = new Action(() => connection = ConnectionFactory.CreateConnection());
+        Action createConnection = new Action(() => connection = this.ConnectionFactory.CreateConnection());
 
 
         // Act
@@ -118,8 +118,8 @@ public class TradingDataDbServiceTests
     {
         // Arrange
         int FakeCandlestick_db_id = int.MinValue;
-        TVCandlestick FakeCandlestick = GetFakeCandlestick();
-        Action action = new Action(() => FakeCandlestick_db_id = SUT.AddCandlestick(FakeCandlestick));
+        TVCandlestick FakeCandlestick = this.GetFakeCandlestick();
+        Action action = new Action(() => FakeCandlestick_db_id = this.SUT.AddCandlestick(FakeCandlestick));
 
         // Act & Assert
         action.Should().NotThrow("because the candlestick is not in the database yet and can be added");
@@ -131,13 +131,13 @@ public class TradingDataDbServiceTests
     public void AddingFuturesOrders_Works()
     {
         // Arrange
-        TVCandlestick Candlestick1 = GetFakeCandlestick();
-        BinanceFuturesOrder Order1 = GetFakeFuturesOrder();
+        TVCandlestick Candlestick1 = this.GetFakeCandlestick();
+        BinanceFuturesOrder Order1 = this.GetFakeFuturesOrder();
         Order1.CreateTime = Candlestick1.Date;
         Order1.Symbol = Candlestick1.CurrencyPair.Name;
 
-        TVCandlestick Candlestick2 = GetFakeCandlestick();
-        BinanceFuturesOrder Order2 = GetFakeFuturesOrder();
+        TVCandlestick Candlestick2 = this.GetFakeCandlestick();
+        BinanceFuturesOrder Order2 = this.GetFakeFuturesOrder();
         Order2.CreateTime = Candlestick2.Date;
         Order2.Symbol = Candlestick2.CurrencyPair.Name;
 
@@ -147,14 +147,14 @@ public class TradingDataDbServiceTests
             (Order1, Order2) = (Order2, Order1);
         }
 
-        BinanceFuturesOrder Order3 = GetFakeFuturesOrder();
+        BinanceFuturesOrder Order3 = this.GetFakeFuturesOrder();
         Order3.Symbol = Candlestick2.CurrencyPair.Name;
 
 
         // Act
-        SUT.AddFuturesOrder(Order1, Candlestick1, out int Order1_Id, out int Candlestick1_Id);
-        SUT.AddFuturesOrder(Order2, Candlestick2, out int Order2_Id, out int Candlestick2_Id);
-        SUT.AddFuturesOrder(Order3, Candlestick2, out int Order3_Id, out int Candlestick3_Id);
+        this.SUT.AddFuturesOrder(Order1, Candlestick1, out int Order1_Id, out int Candlestick1_Id);
+        this.SUT.AddFuturesOrder(Order2, Candlestick2, out int Order2_Id, out int Candlestick2_Id);
+        this.SUT.AddFuturesOrder(Order3, Candlestick2, out int Order3_Id, out int Candlestick3_Id);
 
 
         // Assert
@@ -171,11 +171,11 @@ public class TradingDataDbServiceTests
     public void DeletingCandlestick_Works()
     {
         // Arrange
-        TVCandlestick FakeCandlestick = GetFakeCandlestick();
-        int IdentityAdded = SUT.AddCandlestick(FakeCandlestick);
+        TVCandlestick FakeCandlestick = this.GetFakeCandlestick();
+        int IdentityAdded = this.SUT.AddCandlestick(FakeCandlestick);
 
         // Act
-        int IdentityDeleted = SUT.DeleteCandlestick(FakeCandlestick);
+        int IdentityDeleted = this.SUT.DeleteCandlestick(FakeCandlestick);
 
         // Assert
         IdentityDeleted.Should().NotBe(null).And.NotBe(0).And.Be(IdentityAdded);
@@ -185,14 +185,14 @@ public class TradingDataDbServiceTests
     public void DeletingFuturesOrder_Works()
     {
         // Arrange
-        TVCandlestick FakeCandlestick = GetFakeCandlestick();
-        BinanceFuturesOrder FakeFuturesOrder = GetFakeFuturesOrder();
+        TVCandlestick FakeCandlestick = this.GetFakeCandlestick();
+        BinanceFuturesOrder FakeFuturesOrder = this.GetFakeFuturesOrder();
         FakeFuturesOrder.Symbol = FakeCandlestick.CurrencyPair.Name;
-        SUT.AddFuturesOrder(FakeFuturesOrder, FakeCandlestick, out int FuturesOrder_Id, out int Candlestick_Id);
+        this.SUT.AddFuturesOrder(FakeFuturesOrder, FakeCandlestick, out int FuturesOrder_Id, out int Candlestick_Id);
 
         // Act
-        new Action(() => SUT.DeleteCandlestick(FakeCandlestick)).Should().Throw<SqlException>($"because the {nameof(FakeFuturesOrder)} depends on the {nameof(FakeCandlestick)}, thus the {nameof(FakeCandlestick)} can't be deleted");
-        int DeletedFuturesOrder_Id = SUT.DeleteFuturesOrder(FakeFuturesOrder);
+        new Action(() => this.SUT.DeleteCandlestick(FakeCandlestick)).Should().Throw<SqlException>($"because the {nameof(FakeFuturesOrder)} depends on the {nameof(FakeCandlestick)}, thus the {nameof(FakeCandlestick)} can't be deleted");
+        int DeletedFuturesOrder_Id = this.SUT.DeleteFuturesOrder(FakeFuturesOrder);
 
         // Assert
         DeletedFuturesOrder_Id.Should().NotBe(null).And.NotBe(0).And.Be(FuturesOrder_Id);
@@ -208,17 +208,17 @@ public class TradingDataDbServiceTests
 
 
         // Act
-        GetFakeCandlesticks(100, 150)
+        this.GetFakeCandlesticks(100, 150)
             .DistinctBy(c => (c.CurrencyPair, c.Date)).ToList()
-            .ForEach(c => Candlestick_IDs.Add(SUT.AddCandlestick(c)));
+            .ForEach(c => Candlestick_IDs.Add(this.SUT.AddCandlestick(c)));
 
-        TVCandlestick FakeCandlestick = GetFakeCandlestick();
-        GetFakeFuturesOrders(100, 150)
+        TVCandlestick FakeCandlestick = this.GetFakeCandlestick();
+        this.GetFakeFuturesOrders(100, 150)
             .DistinctBy(order => (order.Id, order.Symbol, order.CreateTime)).ToList()
             .ForEach(order =>
             {
                 order.Symbol = FakeCandlestick.CurrencyPair.Name;
-                SUT.AddFuturesOrder(order, FakeCandlestick, out int id, out int _);
+                this.SUT.AddFuturesOrder(order, FakeCandlestick, out int id, out int _);
                 FuturesOrders_IDs.Add(id);
             });
 
@@ -239,15 +239,15 @@ public class TradingDataDbServiceTests
             catch { return false; }
         }
 
-        SqlConnection connection = ConnectionFactory.CreateConnection();
+        SqlConnection connection = this.ConnectionFactory.CreateConnection();
         try
         {
             // the BinanceFuturesOrders are deleted first because the candlesticks are depending on them
-            CleanupFuturesOrders.ForEach(order => TryInvoke(() => SUT.DeleteFuturesOrder(order)));
-            CleanupCandlesticks.ForEach(candle => TryInvoke(() => SUT.DeleteCandlestick(candle)));
+            this.CleanupFuturesOrders.ForEach(order => TryInvoke(() => this.SUT.DeleteFuturesOrder(order)));
+            this.CleanupCandlesticks.ForEach(candle => TryInvoke(() => this.SUT.DeleteCandlestick(candle)));
 
-            CleanupFuturesOrders.Clear();
-            CleanupCandlesticks.Clear();
+            this.CleanupFuturesOrders.Clear();
+            this.CleanupCandlesticks.Clear();
         }
         finally { connection?.Close(); }
     }

@@ -50,5 +50,5 @@ public class TradingviewChartDataServiceTests
 
 
     [OneTimeTearDown]
-    public void Cleanup() => SUT.Quit();
+    public void Cleanup() => this.SUT.Quit();
 }
