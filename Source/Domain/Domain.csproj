@@ -17,4 +17,12 @@
     <Folder Include="Exceptions\" />
   </ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests"/>
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.Unit"/>
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.Integration"/>
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.EndToEnd"/>
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.System"/>
+	</ItemGroup>
+
 </Project>

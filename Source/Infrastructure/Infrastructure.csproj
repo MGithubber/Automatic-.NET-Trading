@@ -15,11 +15,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
-    <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="$(MSBuildProjectName).Integration.Testing" />
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests" />
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.Unit" />
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.Integration" />
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.EndToEnd" />
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.System" />
 	</ItemGroup>
 	
 </Project>
