@@ -2,7 +2,7 @@ using System.Reflection;
 
 using Binance.Net.Enums;
 
-namespace Infrastructure.Tests.Integration;
+namespace Infrastructure.Tests.Integration.Tests;
 
 [TestFixture]
 public class BinanceCfdTradingApiServiceTests
