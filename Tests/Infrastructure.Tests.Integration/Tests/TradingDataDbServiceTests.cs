@@ -1,5 +1,4 @@
 ﻿using System.Data.SqlClient;
-using System.Diagnostics;
 
 using AutomaticDotNETtrading.Application.Interfaces.Data;
 using AutomaticDotNETtrading.Infrastructure.Data;
@@ -11,30 +10,16 @@ using Binance.Net.Objects.Models.Futures;
 
 using Bogus;
 
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
-
 namespace Infrastructure.Tests.Integration.Tests;
 
 [TestFixture]
 public class TradingDataDbServiceTests
 {
-    private readonly TestcontainerDatabase Container = new TestcontainersBuilder<MsSqlTestcontainer>()
-        .WithDatabase(new MsSqlTestcontainerConfiguration
-        {
-            Database = "DisposableDatabase",
-            Password = "DisposableDbPassword#123",
-        })
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
-        .WithAutoRemove(true)
-        .WithCleanUp(true)
-        .Build();
+    private const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=""Binance trading logs"";Integrated Security=True";
+    private readonly IDatabaseConnectionFactory<SqlConnection> ConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString);
+    private readonly ITradingDataDbService<TVCandlestick> SUT = new TradingDataDbService(ConnectionString);
 
-    private IDatabaseConnectionFactory<SqlConnection> ConnectionFactory;
-    private ITradingDataDbService<TVCandlestick> SUT;
-    
-    
+
     #region Fakers
     private readonly Faker<TVCandlestick> CandlesticksFaker = new Faker<TVCandlestick>()
         .RuleFor(c => c.CurrencyPair, f => new CurrencyPair(f.Finance.Currency().Code, f.Finance.Currency().Code))
@@ -100,30 +85,8 @@ public class TradingDataDbServiceTests
     // Objects to delete from the database
     private readonly List<TVCandlestick> CleanupCandlesticks = new();
     private readonly List<BinanceFuturesOrder> CleanupFuturesOrders = new();
-
-    [OneTimeSetUp]
-    public async Task Setup()
-    {
-        await this.Container.StartAsync();
-        
-        #region Initialise the database
-        string dboDirectory = @"..\..\..\..\..\Source\Trading Data Logs\dbo";
-        
-        var queries = new List<string>();
-        queries.Add(File.ReadAllText(Path.Combine(dboDirectory, "Tables", "Candlesticks.sql")));
-        queries.Add(File.ReadAllText(Path.Combine(dboDirectory, "Tables", "Futures orders.sql")));
-        queries.AddRange(Directory.GetFiles(Path.Combine(dboDirectory, "Stored procedures")).Select(path => File.ReadAllText(path)));
-
-        var connection = new SqlConnection(this.Container.ConnectionString);
-        connection.Open();
-
-        queries.ForEach(query => new SqlCommand(query, connection).ExecuteNonQuery());
-        #endregion
-
-        this.ConnectionFactory = new SqlDatabaseConnectionFactory(this.Container.ConnectionString);
-        this.SUT = new TradingDataDbService(this.Container.ConnectionString);
-    }
-
+    
+    
     #region Tests
     [Test, Order(1)]
     public void CreatingAndClosingConnection_Work()
@@ -259,8 +222,24 @@ public class TradingDataDbServiceTests
     #endregion
     
     [OneTimeTearDown]
-    public async Task Cleanup()
+    public void Cleanup()
     {
-        await this.Container.DisposeAsync();
+        static bool TryInvoke(Func<object> func)
+        {
+            try { func.Invoke(); return true; }
+            catch { return false; }
+        }
+        
+        SqlConnection connection = this.ConnectionFactory.CreateConnection();
+        try
+        {
+            // the BinanceFuturesOrders are deleted first because the candlesticks are depending on them
+            this.CleanupFuturesOrders.ForEach(order => TryInvoke(() => this.SUT.DeleteFuturesOrder(order)));
+            this.CleanupCandlesticks.ForEach(candle => TryInvoke(() => this.SUT.DeleteCandlestick(candle)));
+            
+            this.CleanupFuturesOrders.Clear();
+            this.CleanupCandlesticks.Clear();
+        }
+        finally { connection?.Close(); }
     }
 }
