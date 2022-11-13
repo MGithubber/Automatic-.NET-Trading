@@ -22,7 +22,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
     private readonly SqlDatabaseConnectionFactory ConnectionFactory;
     private SqlConnection? Connection;
 
-    public TradingDataDbService(string ConnectionString, string DatabaseName) => this.ConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString, DatabaseName);
+    public TradingDataDbService(string ConnectionString) => this.ConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString);
     public TradingDataDbService(SqlDatabaseConnectionFactory connectionFactory) => this.ConnectionFactory = connectionFactory;
 
     //// //// ////

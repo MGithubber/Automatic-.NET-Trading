@@ -21,11 +21,9 @@ namespace Infrastructure.Tests.Integration.Tests;
 [TestFixture]
 public class TradingDataDbServiceTests
 {
-    private const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False";
-    private const string DatabaseName = "Binance trading logs";
-    private IDatabaseConnectionFactory<SqlConnection> ConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString, DatabaseName);
-    private readonly ITradingDataDbService<TVCandlestick> SUT = new TradingDataDbService(ConnectionString, DatabaseName);
-
+    private const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=""Binance trading logs"";Integrated Security=True";
+    private IDatabaseConnectionFactory<SqlConnection> ConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString);
+    private readonly ITradingDataDbService<TVCandlestick> SUT = new TradingDataDbService(ConnectionString);
 
     #region Fakers
     private readonly Faker<TVCandlestick> CandlesticksFaker = new Faker<TVCandlestick>()
@@ -93,7 +91,7 @@ public class TradingDataDbServiceTests
     private readonly List<TVCandlestick> CleanupCandlesticks = new();
     private readonly List<BinanceFuturesOrder> CleanupFuturesOrders = new();
 
-
+    
     #region Tests
     [Test, Order(1)]
     public void CreatingAndClosingConnection_Work()
@@ -108,7 +106,6 @@ public class TradingDataDbServiceTests
         createConnection.Should().NotThrow();
 
         new Action(() => connection.Open()).Should().Throw<Exception>("the connection is open already");
-        connection.Database.Should().Be(DatabaseName);
         new Action(() => connection.Close()).Should().NotThrow("the connection is open and it can be closed");
     }
     

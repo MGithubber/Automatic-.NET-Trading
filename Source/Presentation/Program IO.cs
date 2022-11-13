@@ -35,6 +35,5 @@ internal static class ProgramIO
     
     public static readonly ApiCredentials BinanceApiCredentials = new ApiCredentials(File.ReadAllText(@"Process files\ApiCredentials\public key.txt"), File.ReadAllText(@"Process files\ApiCredentials\private key.txt"));
     
-    public const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Integrated Security=True;Persist Security Info=False;Pooling=False;MultipleActiveResultSets=False;Connect Timeout=60;Encrypt=False;TrustServerCertificate=False";
-    public const string DatabaseName = "Binance trading logs";
+    public const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=""Binance trading logs"";Integrated Security=True";
 }

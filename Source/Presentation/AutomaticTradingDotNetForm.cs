@@ -161,7 +161,7 @@ public partial class AutomaticTradingDotNetForm : Form
 
         //// ////
         
-        SqlDatabaseConnectionFactory SqlDatabaseConnectionFactory = new SqlDatabaseConnectionFactory(ProgramIO.ConnectionString, ProgramIO.DatabaseName);
+        SqlDatabaseConnectionFactory SqlDatabaseConnectionFactory = new SqlDatabaseConnectionFactory(ProgramIO.ConnectionString);
         TradingDataDbService TradingDataDbService = new TradingDataDbService(SqlDatabaseConnectionFactory);
         
         //// ////
