@@ -113,15 +113,11 @@ public class TradingDataDbServiceTests
         queries.Add(File.ReadAllText(Path.Combine(dboDirectory, "Tables", "Candlesticks.sql")));
         queries.Add(File.ReadAllText(Path.Combine(dboDirectory, "Tables", "Futures orders.sql")));
         queries.AddRange(Directory.GetFiles(Path.Combine(dboDirectory, "Stored procedures")).Select(path => File.ReadAllText(path)));
-        
-        queries.ForEach(query =>
-        {
-            var connection = new SqlConnection(this.Container.ConnectionString);
-            connection.Open();
 
-            var command = new SqlCommand(query, connection);
-            command.ExecuteNonQuery();
-        });
+        var connection = new SqlConnection(this.Container.ConnectionString);
+        connection.Open();
+
+        queries.ForEach(query => new SqlCommand(query, connection).ExecuteNonQuery());
         #endregion
 
         this.ConnectionFactory = new SqlDatabaseConnectionFactory(this.Container.ConnectionString);
