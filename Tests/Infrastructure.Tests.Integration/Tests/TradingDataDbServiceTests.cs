@@ -10,15 +10,18 @@ using Binance.Net.Objects.Models.Futures;
 
 using Bogus;
 
+using Respawn;
+
 namespace Infrastructure.Tests.Integration.Tests;
 
 [TestFixture]
 public class TradingDataDbServiceTests
 {
-    private const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=""Binance trading logs"";Integrated Security=True";
+    private const string ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=\"Binance trading logs\";Integrated Security=True";
     private readonly IDatabaseConnectionFactory<SqlConnection> ConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString);
     private readonly ITradingDataDbService<TVCandlestick> SUT = new TradingDataDbService(ConnectionString);
-
+    private Respawner DbRespawner = default!; // will clear all data in the database when ResetAsync is called
+    
 
     #region Fakers
     private readonly Faker<TVCandlestick> CandlesticksFaker = new Faker<TVCandlestick>()
@@ -53,40 +56,15 @@ public class TradingDataDbServiceTests
         .RuleFor(order => order.Price, f => f.Random.Decimal(1000, 3000))
         .RuleFor(order => order.Quantity, f => f.Random.Decimal(0.01m, 10));
     #endregion
-    
-    #region private methods
-    private TVCandlestick GetFakeCandlestick()
-    {
-        TVCandlestick fake = this.CandlesticksFaker.Generate();
-        this.CleanupCandlesticks.Add(fake);
-        return fake;
-    }
-    private List<TVCandlestick> GetFakeCandlesticks(int min, int max)
-    {
-        List<TVCandlestick> fakes = this.CandlesticksFaker.GenerateBetween(min, max);
-        fakes.ForEach(fake => this.CleanupCandlesticks.Add(fake));
-        return fakes;
-    }
 
-    private BinanceFuturesOrder GetFakeFuturesOrder()
-    {
-        BinanceFuturesOrder fake = this.FuturesOrdersFaker.Generate();
-        this.CleanupFuturesOrders.Add(fake);
-        return fake;
-    }
-    private List<BinanceFuturesOrder> GetFakeFuturesOrders(int min, int max)
-    {
-        List<BinanceFuturesOrder> fakes = this.FuturesOrdersFaker.GenerateBetween(min, max);
-        fakes.ForEach(fake => this.CleanupFuturesOrders.Add(fake));
-        return fakes;
-    }
-    #endregion
 
-    // Objects to delete from the database
-    private readonly List<TVCandlestick> CleanupCandlesticks = new();
-    private readonly List<BinanceFuturesOrder> CleanupFuturesOrders = new();
+    [SetUp]
+    public async Task Setup()
+    {
+        this.DbRespawner = await Respawner.CreateAsync(ConnectionString);
+    }
     
-    
+
     #region Tests
     [Test, Order(1)]
     public void CreatingAndClosingConnection_Work()
@@ -110,7 +88,7 @@ public class TradingDataDbServiceTests
     {
         // Arrange
         int FakeCandlestick_db_id = int.MinValue;
-        TVCandlestick FakeCandlestick = this.GetFakeCandlestick();
+        TVCandlestick FakeCandlestick = this.CandlesticksFaker.Generate();
         Action action = new Action(() => FakeCandlestick_db_id = this.SUT.AddCandlestick(FakeCandlestick));
 
         // Act & Assert
@@ -123,13 +101,13 @@ public class TradingDataDbServiceTests
     public void AddingFuturesOrders_Works()
     {
         // Arrange
-        TVCandlestick Candlestick1 = this.GetFakeCandlestick();
-        BinanceFuturesOrder Order1 = this.GetFakeFuturesOrder();
+        TVCandlestick Candlestick1 = this.CandlesticksFaker.Generate();
+        BinanceFuturesOrder Order1 = this.FuturesOrdersFaker.Generate();
         Order1.CreateTime = Candlestick1.Date;
         Order1.Symbol = Candlestick1.CurrencyPair.Name;
 
-        TVCandlestick Candlestick2 = this.GetFakeCandlestick();
-        BinanceFuturesOrder Order2 = this.GetFakeFuturesOrder();
+        TVCandlestick Candlestick2 = this.CandlesticksFaker.Generate();
+        BinanceFuturesOrder Order2 = this.FuturesOrdersFaker.Generate();
         Order2.CreateTime = Candlestick2.Date;
         Order2.Symbol = Candlestick2.CurrencyPair.Name;
 
@@ -139,7 +117,7 @@ public class TradingDataDbServiceTests
             (Order1, Order2) = (Order2, Order1);
         }
 
-        BinanceFuturesOrder Order3 = this.GetFakeFuturesOrder();
+        BinanceFuturesOrder Order3 = this.FuturesOrdersFaker.Generate();
         Order3.Symbol = Candlestick2.CurrencyPair.Name;
 
 
@@ -163,7 +141,7 @@ public class TradingDataDbServiceTests
     public void DeletingCandlestick_Works()
     {
         // Arrange
-        TVCandlestick FakeCandlestick = this.GetFakeCandlestick();
+        TVCandlestick FakeCandlestick = this.CandlesticksFaker.Generate();
         int IdentityAdded = this.SUT.AddCandlestick(FakeCandlestick);
 
         // Act
@@ -177,8 +155,8 @@ public class TradingDataDbServiceTests
     public void DeletingFuturesOrder_Works()
     {
         // Arrange
-        TVCandlestick FakeCandlestick = this.GetFakeCandlestick();
-        BinanceFuturesOrder FakeFuturesOrder = this.GetFakeFuturesOrder();
+        TVCandlestick FakeCandlestick = this.CandlesticksFaker.Generate();
+        BinanceFuturesOrder FakeFuturesOrder = this.FuturesOrdersFaker.Generate();
         FakeFuturesOrder.Symbol = FakeCandlestick.CurrencyPair.Name;
         this.SUT.AddFuturesOrder(FakeFuturesOrder, FakeCandlestick, out int FuturesOrder_Id, out int Candlestick_Id);
 
@@ -190,7 +168,7 @@ public class TradingDataDbServiceTests
         DeletedFuturesOrder_Id.Should().NotBe(null).And.NotBe(0).And.Be(FuturesOrder_Id);
     }
 
-
+    
     [Test, Order(6)]
     public void Database_Creates_Consecutive_IDs()
     {
@@ -200,12 +178,12 @@ public class TradingDataDbServiceTests
 
 
         // Act
-        this.GetFakeCandlesticks(100, 150)
+        this.CandlesticksFaker.GenerateBetween(100, 150)
             .DistinctBy(c => (c.CurrencyPair, c.Date)).ToList()
             .ForEach(c => Candlestick_IDs.Add(this.SUT.AddCandlestick(c)));
-
-        TVCandlestick FakeCandlestick = this.GetFakeCandlestick();
-        this.GetFakeFuturesOrders(100, 150)
+        
+        TVCandlestick FakeCandlestick = this.CandlesticksFaker.Generate();
+        this.FuturesOrdersFaker.GenerateBetween(100, 150)
             .DistinctBy(order => (order.Id, order.Symbol, order.CreateTime)).ToList()
             .ForEach(order =>
             {
@@ -221,25 +199,9 @@ public class TradingDataDbServiceTests
     }
     #endregion
     
-    [OneTimeTearDown]
-    public void Cleanup()
+    [TearDown]
+    public async Task Cleanup()
     {
-        static bool TryInvoke(Func<object> func)
-        {
-            try { func.Invoke(); return true; }
-            catch { return false; }
-        }
-        
-        SqlConnection connection = this.ConnectionFactory.CreateConnection();
-        try
-        {
-            // the BinanceFuturesOrders are deleted first because the candlesticks are depending on them
-            this.CleanupFuturesOrders.ForEach(order => TryInvoke(() => this.SUT.DeleteFuturesOrder(order)));
-            this.CleanupCandlesticks.ForEach(candle => TryInvoke(() => this.SUT.DeleteCandlestick(candle)));
-            
-            this.CleanupFuturesOrders.Clear();
-            this.CleanupCandlesticks.Clear();
-        }
-        finally { connection?.Close(); }
+        await this.DbRespawner.ResetAsync(ConnectionString);
     }
 }
