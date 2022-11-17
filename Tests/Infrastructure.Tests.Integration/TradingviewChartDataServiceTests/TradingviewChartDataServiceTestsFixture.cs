@@ -9,19 +9,14 @@ using AutomaticDotNETtrading.Infrastructure.Models;
 
 using Bogus;
 
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-using OpenQA.Selenium;
-
 namespace Infrastructure.Tests.Integration.TradingviewChartDataServiceTests;
 
 [TestFixture]
-public class TradingviewChartDataServiceTests
+public abstract class TradingviewChartDataServiceTestsFixture
 {
-    private TradingviewChartDataService SUT = new TradingviewChartDataService();
-
-
-    #region Fakers
-    private readonly Faker<TVCandlestick> CandlesticksFaker = new Faker<TVCandlestick>()
+    protected IChartDataService<TVCandlestick> SUT = new TradingviewChartDataService();
+    
+    protected readonly Faker<TVCandlestick> CandlesticksFaker = new Faker<TVCandlestick>()
     .RuleFor(c => c.CurrencyPair, f => new CurrencyPair(f.Finance.Currency().Code, f.Finance.Currency().Code))
     .RuleFor(c => c.Date, f => f.Date.Between(f.Date.Recent(5480), f.Date.Soon(5480)))
     .RuleFor(c => c.Open, f => f.Random.Decimal(1000, 3000))
@@ -43,12 +38,4 @@ public class TradingviewChartDataServiceTests
             case LuxAlgoSignal.ExitSell: c.ExitSell = f.Random.Double(950, 3050); break;
         }
     });
-    #endregion
-
-
-    // // TO DO tests // //
-
-
-    [OneTimeTearDown]
-    public void Cleanup() => SUT.Quit();
 }
