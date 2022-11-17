@@ -92,9 +92,9 @@ public class FuturesPosition
     }
     
     #region Position prices of interest getters
-    public decimal EntryPrice => this.EntryOrder.Price;
-    public decimal? StopLossPrice => this.StopLossOrder?.Price;
-    public decimal? TakeProfitPrice => this.TakeProfitOrder?.Price;
+    public decimal EntryPrice => this.EntryOrder.AvgPrice;
+    public decimal? StopLossPrice => this.StopLossOrder?.StopPrice;
+    public decimal? TakeProfitPrice => this.TakeProfitOrder?.StopPrice;
     #endregion
 
     #region Constructors
