@@ -12,7 +12,7 @@ using Bogus;
 
 using Respawn;
 
-namespace Infrastructure.Tests.Integration.Tests;
+namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 
 [TestFixture]
 public class TradingDataDbServiceTests
@@ -35,7 +35,7 @@ public class TradingDataDbServiceTests
         {
             if (f.PickRandom(true, false))
                 return; // signal stays Hold
-            
+
             object _ = f.PickRandom<LuxAlgoSignal>() switch
             {
                 LuxAlgoSignal.Buy => c.Buy = true,
@@ -44,7 +44,8 @@ public class TradingDataDbServiceTests
                 LuxAlgoSignal.StrongSell => c.StrongSell = true,
                 LuxAlgoSignal.ExitBuy => c.ExitBuy = f.Random.Double(950, 3050),
                 LuxAlgoSignal.ExitSell => c.ExitSell = f.Random.Double(950, 3050),
-                _ => () => { },
+                _ => () => { }
+                ,
             };
         });
 
@@ -62,7 +63,7 @@ public class TradingDataDbServiceTests
     [SetUp]
     public async Task Setup()
     {
-        this.DbRespawner = await Respawner.CreateAsync(ConnectionString);
+        DbRespawner = await Respawner.CreateAsync(ConnectionString);
     }
 
     #region Tests
@@ -71,7 +72,7 @@ public class TradingDataDbServiceTests
     {
         // Arrange
         SqlConnection connection = default!;
-        Action createConnection = new Action(() => connection = this.ConnectionFactory.CreateConnection());
+        Action createConnection = new Action(() => connection = ConnectionFactory.CreateConnection());
 
 
         // Act
@@ -88,8 +89,8 @@ public class TradingDataDbServiceTests
     {
         // Arrange
         int FakeCandlestick_db_id = int.MinValue;
-        TVCandlestick FakeCandlestick = this.CandlesticksFaker.Generate();
-        Action action = new Action(() => FakeCandlestick_db_id = this.SUT.AddCandlestick(FakeCandlestick));
+        TVCandlestick FakeCandlestick = CandlesticksFaker.Generate();
+        Action action = new Action(() => FakeCandlestick_db_id = SUT.AddCandlestick(FakeCandlestick));
 
         // Act & Assert
         action.Should().NotThrow("because the candlestick is not in the database yet and can be added");
@@ -101,13 +102,13 @@ public class TradingDataDbServiceTests
     public void AddingFuturesOrders_Works()
     {
         // Arrange
-        TVCandlestick Candlestick1 = this.CandlesticksFaker.Generate();
-        BinanceFuturesOrder Order1 = this.FuturesOrdersFaker.Generate();
+        TVCandlestick Candlestick1 = CandlesticksFaker.Generate();
+        BinanceFuturesOrder Order1 = FuturesOrdersFaker.Generate();
         Order1.CreateTime = Candlestick1.Date;
         Order1.Symbol = Candlestick1.CurrencyPair.Name;
 
-        TVCandlestick Candlestick2 = this.CandlesticksFaker.Generate();
-        BinanceFuturesOrder Order2 = this.FuturesOrdersFaker.Generate();
+        TVCandlestick Candlestick2 = CandlesticksFaker.Generate();
+        BinanceFuturesOrder Order2 = FuturesOrdersFaker.Generate();
         Order2.CreateTime = Candlestick2.Date;
         Order2.Symbol = Candlestick2.CurrencyPair.Name;
 
@@ -117,14 +118,14 @@ public class TradingDataDbServiceTests
             (Order1, Order2) = (Order2, Order1);
         }
 
-        BinanceFuturesOrder Order3 = this.FuturesOrdersFaker.Generate();
+        BinanceFuturesOrder Order3 = FuturesOrdersFaker.Generate();
         Order3.Symbol = Candlestick2.CurrencyPair.Name;
 
 
         // Act
-        this.SUT.AddFuturesOrder(Order1, Candlestick1, out int Order1_Id, out int Candlestick1_Id);
-        this.SUT.AddFuturesOrder(Order2, Candlestick2, out int Order2_Id, out int Candlestick2_Id);
-        this.SUT.AddFuturesOrder(Order3, Candlestick2, out int Order3_Id, out int Candlestick3_Id);
+        SUT.AddFuturesOrder(Order1, Candlestick1, out int Order1_Id, out int Candlestick1_Id);
+        SUT.AddFuturesOrder(Order2, Candlestick2, out int Order2_Id, out int Candlestick2_Id);
+        SUT.AddFuturesOrder(Order3, Candlestick2, out int Order3_Id, out int Candlestick3_Id);
 
 
         // Assert
@@ -141,11 +142,11 @@ public class TradingDataDbServiceTests
     public void DeletingCandlestick_Works()
     {
         // Arrange
-        TVCandlestick FakeCandlestick = this.CandlesticksFaker.Generate();
-        int IdentityAdded = this.SUT.AddCandlestick(FakeCandlestick);
+        TVCandlestick FakeCandlestick = CandlesticksFaker.Generate();
+        int IdentityAdded = SUT.AddCandlestick(FakeCandlestick);
 
         // Act
-        int IdentityDeleted = this.SUT.DeleteCandlestick(FakeCandlestick);
+        int IdentityDeleted = SUT.DeleteCandlestick(FakeCandlestick);
 
         // Assert
         IdentityDeleted.Should().NotBe(null).And.NotBe(0).And.Be(IdentityAdded);
@@ -155,14 +156,14 @@ public class TradingDataDbServiceTests
     public void DeletingFuturesOrder_Works()
     {
         // Arrange
-        TVCandlestick FakeCandlestick = this.CandlesticksFaker.Generate();
-        BinanceFuturesOrder FakeFuturesOrder = this.FuturesOrdersFaker.Generate();
+        TVCandlestick FakeCandlestick = CandlesticksFaker.Generate();
+        BinanceFuturesOrder FakeFuturesOrder = FuturesOrdersFaker.Generate();
         FakeFuturesOrder.Symbol = FakeCandlestick.CurrencyPair.Name;
-        this.SUT.AddFuturesOrder(FakeFuturesOrder, FakeCandlestick, out int FuturesOrder_Id, out int Candlestick_Id);
+        SUT.AddFuturesOrder(FakeFuturesOrder, FakeCandlestick, out int FuturesOrder_Id, out int Candlestick_Id);
 
         // Act
-        new Action(() => this.SUT.DeleteCandlestick(FakeCandlestick)).Should().Throw<SqlException>($"because the {nameof(FakeFuturesOrder)} depends on the {nameof(FakeCandlestick)}, thus the {nameof(FakeCandlestick)} can't be deleted");
-        int DeletedFuturesOrder_Id = this.SUT.DeleteFuturesOrder(FakeFuturesOrder);
+        new Action(() => SUT.DeleteCandlestick(FakeCandlestick)).Should().Throw<SqlException>($"because the {nameof(FakeFuturesOrder)} depends on the {nameof(FakeCandlestick)}, thus the {nameof(FakeCandlestick)} can't be deleted");
+        int DeletedFuturesOrder_Id = SUT.DeleteFuturesOrder(FakeFuturesOrder);
 
         // Assert
         DeletedFuturesOrder_Id.Should().NotBe(null).And.NotBe(0).And.Be(FuturesOrder_Id);
@@ -178,17 +179,17 @@ public class TradingDataDbServiceTests
 
 
         // Act
-        this.CandlesticksFaker.GenerateBetween(100, 150)
+        CandlesticksFaker.GenerateBetween(100, 150)
             .DistinctBy(c => (c.CurrencyPair, c.Date)).ToList()
-            .ForEach(c => Candlestick_IDs.Add(this.SUT.AddCandlestick(c)));
+            .ForEach(c => Candlestick_IDs.Add(SUT.AddCandlestick(c)));
 
-        TVCandlestick FakeCandlestick = this.CandlesticksFaker.Generate();
-        this.FuturesOrdersFaker.GenerateBetween(100, 150)
+        TVCandlestick FakeCandlestick = CandlesticksFaker.Generate();
+        FuturesOrdersFaker.GenerateBetween(100, 150)
             .DistinctBy(order => (order.Id, order.Symbol, order.CreateTime)).ToList()
             .ForEach(order =>
             {
                 order.Symbol = FakeCandlestick.CurrencyPair.Name;
-                this.SUT.AddFuturesOrder(order, FakeCandlestick, out int id, out int _);
+                SUT.AddFuturesOrder(order, FakeCandlestick, out int id, out int _);
                 FuturesOrders_IDs.Add(id);
             });
 
@@ -202,6 +203,6 @@ public class TradingDataDbServiceTests
     [TearDown]
     public async Task Cleanup()
     {
-        await this.DbRespawner.ResetAsync(ConnectionString);
+        await DbRespawner.ResetAsync(ConnectionString);
     }
 }

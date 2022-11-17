@@ -12,13 +12,13 @@ using Bogus;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using OpenQA.Selenium;
 
-namespace Infrastructure.Tests.Integration;
+namespace Infrastructure.Tests.Integration.TradingviewChartDataServiceTests;
 
 [TestFixture]
 public class TradingviewChartDataServiceTests
 {
     private TradingviewChartDataService SUT = new TradingviewChartDataService();
-    
+
 
     #region Fakers
     private readonly Faker<TVCandlestick> CandlesticksFaker = new Faker<TVCandlestick>()
@@ -50,5 +50,5 @@ public class TradingviewChartDataServiceTests
 
 
     [OneTimeTearDown]
-    public void Cleanup() => this.SUT.Quit();
+    public void Cleanup() => SUT.Quit();
 }
