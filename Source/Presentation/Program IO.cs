@@ -14,26 +14,28 @@ namespace Presentation;
 
 internal static class ProgramIO
 {
-    public static readonly DirectoryInfo ChromeDriverDirectory = new DirectoryInfo(@"Process files\Chrome driver");
-    public static readonly DirectoryInfo ChromeDownloadsDirectory = new DirectoryInfo(@"Process files\Chrome driver\Downloads");
+    private const string ProcessFiles = @"..\..\Process files";
+
+    public static readonly DirectoryInfo ChromeDriverDirectory = new DirectoryInfo($@"{ProcessFiles}\Chrome driver");
+    public static readonly DirectoryInfo ChromeDownloadsDirectory = new DirectoryInfo($@"{ProcessFiles}\Chrome driver\Downloads");
 
     public static readonly DirectoryInfo UserDataDirectory = new DirectoryInfo($@"C:\Users\{Environment.UserName}\AppData\Local\Google\Chrome\User Data");
 
-    public static readonly DirectoryInfo InstructionsDirectory = new DirectoryInfo(@"Process files\Instructions");
-    public static readonly FileInfo StartInstructionsFile = new FileInfo(@"Process files\Instructions\program start.txt");
+    public static readonly DirectoryInfo InstructionsDirectory = new DirectoryInfo($@"{ProcessFiles}\Instructions");
+    public static readonly FileInfo StartInstructionsFile = new FileInfo($@"{ProcessFiles}\Instructions\program start.txt");
 
-    public static readonly DirectoryInfo LogsDirectory = new DirectoryInfo(@"Process files\Logs");
+    public static readonly DirectoryInfo LogsDirectory = new DirectoryInfo($@"{ProcessFiles}\Logs");
 
-    public static readonly DirectoryInfo SelectorsDirectory = new DirectoryInfo(@"Process files\Selectors");
-    public static readonly DirectoryInfo XPathSelectorsDirectory = new DirectoryInfo(@"Process files\Selectors\XPath");
+    public static readonly DirectoryInfo SelectorsDirectory = new DirectoryInfo($@"{ProcessFiles}\Selectors");
+    public static readonly DirectoryInfo XPathSelectorsDirectory = new DirectoryInfo($@"{ProcessFiles}\Selectors\XPath");
 
-    public static readonly DirectoryInfo TradingParametersDirectory = new DirectoryInfo(@"Process files\Trading Parameters");
-    public static readonly FileInfo TradingParametersXmlFile_Long = new FileInfo(@"Process files\Trading Parameters\LONG parameters.txt");
-    public static readonly FileInfo TradingParametersXMLFile_Short = new FileInfo(@"Process files\Trading Parameters\SHORT parameters.txt");
-    
+    public static readonly DirectoryInfo TradingParametersDirectory = new DirectoryInfo($@"{ProcessFiles}\Trading Parameters");
+    public static readonly FileInfo TradingParametersXmlFile_Long = new FileInfo($@"{ProcessFiles}\Trading Parameters\LONG parameters.txt");
+    public static readonly FileInfo TradingParametersXMLFile_Short = new FileInfo($@"{ProcessFiles}\Trading Parameters\SHORT parameters.txt");
+
     /////
     
-    public static readonly ApiCredentials BinanceApiCredentials = new ApiCredentials(File.ReadAllText(@"Process files\ApiCredentials\public key.txt"), File.ReadAllText(@"Process files\ApiCredentials\private key.txt"));
-    
+    public static readonly ApiCredentials BinanceApiCredentials = new ApiCredentials(File.ReadAllText($@"{ProcessFiles}\ApiCredentials\public key.txt"), File.ReadAllText($@"{ProcessFiles}\ApiCredentials\private key.txt"));
+
     public const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=""Binance trading logs"";Integrated Security=True";
 }

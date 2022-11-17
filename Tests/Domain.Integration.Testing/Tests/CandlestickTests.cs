@@ -49,7 +49,7 @@ public class CandlestickTests
     public void GetParabolicSar_RealValuesChart_Returns_Same_Results()
     {
         // Arrange
-        StreamReader reader = new StreamReader(@"..\Process files\Candlestick charts\BINANCE_ETHBUSD, 15.csv");
+        StreamReader reader = new StreamReader(@"..\..\Process files\Candlestick charts\BINANCE_ETHBUSD, 15.csv");
         CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         csv.Context.RegisterClassMap<CsvQuoteTradingviewStyleMap>();
         this.Quotes = csv.GetRecords<Quote>().ToArray();
@@ -61,7 +61,7 @@ public class CandlestickTests
             Low = quote.Low,
             Close = quote.Close
         });
-
+        
         // Act
         var PsarResult_Quotes = this.Quotes.GetParabolicSar();
         var PsarResult_Candlesticks = this.Candlesticks.GetParabolicSar();
