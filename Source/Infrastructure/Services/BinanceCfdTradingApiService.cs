@@ -27,13 +27,11 @@ namespace AutomaticDotNETtrading.Infrastructure.Services;
 public class BinanceCfdTradingApiService : ICfdTradingApiService
 {
     public CurrencyPair CurrencyPair { get; }
-    #region Binance api clients
     private readonly IBinanceClient BinanceClient;
     private readonly IBinanceClientUsdFuturesApi FuturesClient;
     private readonly IBinanceClientUsdFuturesApiTrading TradingClient;
     private readonly IBinanceClientUsdFuturesApiExchangeData ExchangeData;
-    #endregion
-    
+
     public decimal Leverage { get; }
     
     public BinanceCfdTradingApiService(CurrencyPair CurrencyPair, ApiCredentials ApiCredentials, decimal Leverage = 10)
@@ -49,12 +47,11 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
         this.Leverage = Leverage;
     }
 
-    //// ////
+    //// //// ////
 
     public FuturesPosition? Position { get; private set; }
     
-    ////
-    
+
     public async Task<CallResult<BinanceFuturesOrder>> GetOrderAsync(long orderID) => await this.TradingClient.GetOrderAsync(symbol: this.CurrencyPair.Name, orderId: orderID);
     
     public async Task<decimal> GetCurrentPriceAsync()
@@ -82,31 +79,25 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
 
         return filteredAssets[0].AvailableBalance;
     }
-    
-    ////
-    
-    #region Binance orders placing
-    public async Task<CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>>> OpenPositionAtMarketPriceAsync(OrderSide OrderSide, decimal MarginBUSD = decimal.MaxValue, decimal? StopLoss_price = null, decimal? TakeProfit_price = null)
+
+    //// //// ////
+
+    private async Task<(decimal, decimal)> Get_BaseQuantity_and_CurrentPrice_Async(decimal MarginBUSD)
     {
-        async Task<(decimal, decimal)> Get_BaseQuantity_and_CurrentPrice(decimal MarginBUSD)
-        {
-            decimal BaseQuantity;
-            decimal equityBUSD = decimal.MinusOne;
-            decimal CurrentPrice = decimal.MinusOne;
+        decimal BaseQuantity;
+        decimal equityBUSD;
+        decimal CurrentPrice;
 
-            Task<decimal> GetCurrentPrice_Task = this.GetCurrentPriceAsync();
-            equityBUSD = (MarginBUSD == decimal.MaxValue) ? await this.GetEquityAsync() : MarginBUSD;
-            CurrentPrice = await GetCurrentPrice_Task;
+        Task<decimal> GetCurrentPrice_Task = this.GetCurrentPriceAsync();
+        equityBUSD = (MarginBUSD == decimal.MaxValue) ? await this.GetEquityAsync() : MarginBUSD;
+        CurrentPrice = await GetCurrentPrice_Task;
 
-            BaseQuantity = Math.Round(equityBUSD * this.Leverage / CurrentPrice, 2, MidpointRounding.ToZero);
+        BaseQuantity = Math.Round(equityBUSD * this.Leverage / CurrentPrice, 2, MidpointRounding.ToZero);
 
-            return (BaseQuantity, CurrentPrice);
-        }
-        (decimal BaseQuantity, decimal CurrentPrice) = await Get_BaseQuantity_and_CurrentPrice(MarginBUSD);
-        
-        // // //
-
-        #region Invalid input handling
+        return (BaseQuantity, CurrentPrice);
+    }
+    private static ArgumentError? ValidateInput(OrderSide OrderSide, decimal? StopLoss_price, decimal? TakeProfit_price, decimal CurrentPrice)
+    {
         StringBuilder builder = new StringBuilder();
         if (StopLoss_price <= 0)
             builder.AppendLine($"Invalid argument for {nameof(StopLoss_price)}, specified value was {StopLoss_price}");
@@ -115,7 +106,7 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
             builder.AppendLine($"Invalid argument for {nameof(TakeProfit_price)}, specified value was {TakeProfit_price}");
 
         if (builder.Length != 0)
-            throw new ArgumentException(message: builder.Remove(builder.Length - 1, 1).ToString());
+            return new ArgumentError(builder.Remove(builder.Length - 1, 1).ToString());
 
         if (OrderSide == OrderSide.Buy)
         {
@@ -140,18 +131,22 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
         }
 
         if (builder.Length != 0)
-            throw new ArgumentException(message: builder.Remove(builder.Length - 1, 1).ToString());
-        #endregion
+            return new ArgumentError(builder.Remove(builder.Length - 1, 1).ToString());
 
-        List<BinanceFuturesBatchOrder> BatchOrders = new List<BinanceFuturesBatchOrder>();
-        #region Create the batch orders
-        BatchOrders.Add(new BinanceFuturesBatchOrder
+        return null;
+    }
+    private List<BinanceFuturesBatchOrder> CreateBinanceBatchOrders(OrderSide OrderSide, decimal? StopLoss_price, decimal? TakeProfit_price, decimal BaseQuantity)
+    {
+        List<BinanceFuturesBatchOrder> BatchOrders = new()
         {
-            Symbol = this.CurrencyPair.Name,
-            Side = OrderSide,
-            Type = FuturesOrderType.Market,
-            Quantity = BaseQuantity,
-        });
+            new BinanceFuturesBatchOrder
+            {
+                Symbol = this.CurrencyPair.Name,
+                Side = OrderSide,
+                Type = FuturesOrderType.Market,
+                Quantity = BaseQuantity,
+            }
+        };
         if (StopLoss_price.HasValue)
         {
             BatchOrders.Add(new BinanceFuturesBatchOrder
@@ -173,39 +168,56 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
                 Quantity = BaseQuantity,
                 StopPrice = Math.Round(TakeProfit_price.Value, 2),
             });
-        } 
-        #endregion
+        }
 
-        
+        return BatchOrders;
+    }
+    private FuturesPosition CreateFuturesPosition(CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>> CallResult, decimal MarginBUSD)
+    {
+        List<BinanceFuturesPlacedOrder> PlacedOrders = CallResult.Data.Select(call => call.Data).Where(placedOrder => placedOrder is not null).ToList();
+        List<BinanceFuturesOrder> FuturesOrders = Enumerable.Range(0, 3).Select(_ => new BinanceFuturesOrder()).ToList();
+        Parallel.For(0, PlacedOrders.Count, i => FuturesOrders[i] = this.GetOrderAsync(PlacedOrders[i].Id).GetAwaiter().GetResult().Data); // Parallel.For isn't async await friendly
+
+        return new FuturesPosition(this.CurrencyPair)
+        {
+            Leverage = this.Leverage,
+            Margin = MarginBUSD,
+
+            EntryOrder = FuturesOrders[0],
+            StopLossOrder = FuturesOrders[1],
+            TakeProfitOrder = FuturesOrders[2]
+        };
+    }
+    public async Task<CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>>> OpenPositionAtMarketPriceAsync(OrderSide OrderSide, decimal MarginBUSD = decimal.MaxValue, decimal? StopLoss_price = null, decimal? TakeProfit_price = null)
+    {
+        (decimal BaseQuantity, decimal CurrentPrice) = await Get_BaseQuantity_and_CurrentPrice_Async(MarginBUSD);
+
+        ArgumentError? error = ValidateInput(OrderSide, StopLoss_price, TakeProfit_price, CurrentPrice);
+        if (error != null)
+        {
+            return new(error);
+        }
+                
+        List<BinanceFuturesBatchOrder> BatchOrders = CreateBinanceBatchOrders(OrderSide, StopLoss_price, TakeProfit_price, BaseQuantity);
         CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>> CallResult = await this.TradingClient.PlaceMultipleOrdersAsync(orders: BatchOrders.ToArray());
         if (!CallResult.Success)
         {
             return CallResult;
         }
         
-        // // Get the binance futures orders from the binace futures placed orders to assign this.Position
-        List<BinanceFuturesPlacedOrder> PlacedOrders = CallResult.Data.Select(call => call.Data).Where(placedOrder => placedOrder is not null).ToList();
-        List<BinanceFuturesOrder> FuturesOrders = Enumerable.Range(0, 3).Select(_ => new BinanceFuturesOrder()).ToList();
-        Parallel.For(0, PlacedOrders.Count, i => FuturesOrders[i] = this.GetOrderAsync(PlacedOrders[i].Id).GetAwaiter().GetResult().Data); // Parallel.For not async await friendly
-        
-        this.Position = new FuturesPosition(this.CurrencyPair)
-        {
-            Leverage = this.Leverage,
-            Margin = 0.0m,
+        this.Position = CreateFuturesPosition(CallResult, MarginBUSD);
 
-            EntryOrder = FuturesOrders[0],
-            StopLossOrder = FuturesOrders[1],
-            TakeProfitOrder = FuturesOrders[2]
-        };
-        
         return CallResult;
     }
+
+
     public async Task<CallResult<BinanceFuturesOrder>> ClosePositionAsync()
     {
-        #region Invalid input handling
         if (this.Position is null)
-            throw new ArgumentException("Can't close position since no position is open", new NullReferenceException($"{nameof(this.Position)} is NULL"));
-        #endregion
+        {
+            return new(new ArgumentError($"Can't close position since no position is open, {nameof(this.Position)} is NULL"));
+        }
+        
 
         CallResult<BinanceFuturesPlacedOrder> ClosingCallResult = await this.TradingClient.PlaceOrderAsync(symbol: this.CurrencyPair.Name, side: this.Position.EntryOrder.Side.Invert(), type: FuturesOrderType.Market, quantity: this.Position.EntryOrder.Quantity);
         if (!ClosingCallResult.Success)
@@ -216,24 +228,25 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
 
         Task<CallResult<BinanceFuturesOrder>> GetFuturesOrderTask = this.GetOrderAsync(ClosingCallResult.Data.Id);
         
+
         WebCallResult<IEnumerable<CallResult<BinanceFuturesCancelOrder>>> CancellingCallResult = await this.TradingClient.CancelMultipleOrdersAsync(symbol: this.CurrencyPair.Name, this.Position.GetOrdersIDs().ToList());
         if (!CancellingCallResult.Success)
         {
             return ClosingCallResult.As((await GetFuturesOrderTask).Data);
         }
         
+        
         this.Position = null;
         return ClosingCallResult.As((await GetFuturesOrderTask).Data);
     }
+
     public async Task<CallResult<BinanceFuturesPlacedOrder>> PlaceStopLossAsync(decimal price)
     {
-        #region Invalid input handling
         if (this.Position is null)
-            throw new ArgumentException("Can't place a new stop loss order since no position is open", new NullReferenceException($"{nameof(this.Position)} is NULL"));
+        {
+            return new(new ArgumentError("Can't place a new stop loss order since no position is open"));
+        }
 
-        if (price < 0)
-            throw new ArgumentException($"Invalid argument for {nameof(price)}, specified value was {price}", paramName: nameof(price));
-        #endregion
 
         CallResult<BinanceFuturesPlacedOrder> CallResult = await this.TradingClient.PlaceOrderAsync(symbol: this.CurrencyPair.Name, side: this.Position.EntryOrder.Side.Invert(), type: FuturesOrderType.StopMarket, quantity: this.Position.EntryOrder.Quantity, stopPrice: Math.Round(price, 2));
         if (!CallResult.Success)
@@ -241,14 +254,16 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
             return CallResult;
         }
         
+        
         Task<CallResult<BinanceFuturesOrder>> GetFuturesOrderTask = this.GetOrderAsync(CallResult.Data.Id);
         if (this.Position.StopLossOrder is not null)
         {
             await this.TradingClient.CancelOrderAsync(symbol: CurrencyPair.Name, this.Position.StopLossOrder.Id);
         }
+
         this.Position.StopLossOrder = (await GetFuturesOrderTask).Data;
         
+
         return CallResult;
     } 
-    #endregion
 }
