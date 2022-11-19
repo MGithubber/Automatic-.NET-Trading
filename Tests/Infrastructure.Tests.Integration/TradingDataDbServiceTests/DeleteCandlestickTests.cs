@@ -4,8 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using AutomaticDotNETtrading.Infrastructure.Models;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 
 namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 

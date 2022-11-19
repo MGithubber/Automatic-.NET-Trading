@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 
 using AutomaticDotNETtrading.Application.Interfaces.Data;
 using AutomaticDotNETtrading.Infrastructure.Data;
-using AutomaticDotNETtrading.Infrastructure.Enums;
-using AutomaticDotNETtrading.Infrastructure.Models;
-
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enums;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 using Binance.Net.Enums;
 using Binance.Net.Objects.Models.Futures;
 using Bogus;

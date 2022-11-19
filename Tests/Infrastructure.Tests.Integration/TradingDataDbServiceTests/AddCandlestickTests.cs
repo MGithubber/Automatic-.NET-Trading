@@ -1,5 +1,4 @@
-﻿using AutomaticDotNETtrading.Infrastructure.Models;
-
+﻿using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 using System.Data.SqlClient;
 
 namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;

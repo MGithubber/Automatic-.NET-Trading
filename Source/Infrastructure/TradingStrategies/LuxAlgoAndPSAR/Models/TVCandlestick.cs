@@ -8,11 +8,10 @@ using System.Threading.Tasks;
 
 // // // INDICATORS .NET // // //
 using Skender.Stock.Indicators;
-
-using AutomaticDotNETtrading.Infrastructure.Enums;
 using AutomaticDotNETtrading.Domain.Models;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enums;
 
-namespace AutomaticDotNETtrading.Infrastructure.Models;
+namespace AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 
 /// <summary>
 /// Represents a mutable object that contains the data window elements for a candlestick from https://www.tradingview.com
@@ -37,7 +36,7 @@ public class TVCandlestick : Candlestick
                     if (property.PropertyType == typeof(bool)) // confirmation signals (Buy, StrongBuy, Sell, StrongSell)
                         if ((bool)property.GetValue(this)! == true)
                             return signal;
-                    
+
                     if (property.PropertyType == typeof(double)) // exit signals (ExitBuy, ExitSell)
                         if (!double.IsNaN((double)property.GetValue(this)!))
                             return signal;

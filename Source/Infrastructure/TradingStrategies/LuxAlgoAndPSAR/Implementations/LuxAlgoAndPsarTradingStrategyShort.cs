@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 using AutomaticDotNETtrading.Application.Interfaces;
 using AutomaticDotNETtrading.Infrastructure.Enums;
-using AutomaticDotNETtrading.Infrastructure.Models;
 using AutomaticDotNETtrading.Infrastructure.Services;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enums;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 using Binance.Net.Enums;
 
-namespace AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR;
+namespace AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Implementations;
 
 public sealed class LuxAlgoAndPsarTradingStrategyShort : LuxAlgoAndPsarTradingStrategy
 {
@@ -32,7 +33,7 @@ public sealed class LuxAlgoAndPsarTradingStrategyShort : LuxAlgoAndPsarTradingSt
         StopLoss = 0;
         ExitSignalPrice = long.MinValue;
     }
-    
+
     //// //// //// ////
 
     private void TrailingStopLoss(int i)
@@ -41,14 +42,14 @@ public sealed class LuxAlgoAndPsarTradingStrategyShort : LuxAlgoAndPsarTradingSt
             if (TradingParams.Breakeven * EntryPrice > LastOpenPrice)
             {
                 StopLoss = EntryPrice;
-                base.PlaceNewStopLoss(StopLoss).Wait();
+                PlaceNewStopLoss(StopLoss).Wait();
             }
 
         if (StopLoss > ExitSignalPrice)
             if (TradingParams.ExitBreakeven * ExitSignalPrice > LastOpenPrice)
             {
                 StopLoss = ExitSignalPrice;
-                base.PlaceNewStopLoss(StopLoss).Wait();
+                PlaceNewStopLoss(StopLoss).Wait();
             }
 
         decimal sl_close = LastCandle.Open * TradingParams.AscendingCloses_or_DescendingCloses;
@@ -77,12 +78,12 @@ public sealed class LuxAlgoAndPsarTradingStrategyShort : LuxAlgoAndPsarTradingSt
         if (descending_closes && StopLoss > sl_close && sl_close > LastOpenPrice)
         {
             StopLoss = Math.Min(StopLoss, sl_close);
-            base.PlaceNewStopLoss(StopLoss).Wait();
+            PlaceNewStopLoss(StopLoss).Wait();
         }
         else if (descending_highs && StopLoss > sl_high && sl_high > LastOpenPrice)
         {
             StopLoss = Math.Min(StopLoss, sl_high);
-            base.PlaceNewStopLoss(StopLoss).Wait();
+            PlaceNewStopLoss(StopLoss).Wait();
         }
         #endregion
     }
@@ -93,7 +94,7 @@ public sealed class LuxAlgoAndPsarTradingStrategyShort : LuxAlgoAndPsarTradingSt
         EntryPrice = LastOpenPrice;
         StopLoss = Math.Min(EntryPrice * TradingParams.WorstCaseSL, LastCandle.High * TradingParams.OriginalSL);
 
-        base.OpenFuturesPosition(OrderSide.Sell, StopLoss).Wait();
+        OpenFuturesPosition(OrderSide.Sell, StopLoss).Wait();
     }
     private void ClosePosition(decimal exit_prc)
     {
@@ -102,7 +103,7 @@ public sealed class LuxAlgoAndPsarTradingStrategyShort : LuxAlgoAndPsarTradingSt
         StopLoss = 0;
         ExitSignalPrice = long.MinValue;
 
-        base.CloseFuturesPosition().Wait();
+        CloseFuturesPosition().Wait();
     }
     private void stop_out_position_short(decimal stop_loss_prc)
     {
@@ -110,8 +111,8 @@ public sealed class LuxAlgoAndPsarTradingStrategyShort : LuxAlgoAndPsarTradingSt
         EntryPrice = 0;
         StopLoss = 0;
         ExitSignalPrice = long.MinValue;
-        
-        base.OnStopOutDetected_Invoke(this, LastCandle);
+
+        OnStopOutDetected_Invoke(this, LastCandle);
     }
 
     private bool ParabolicSarDivergence(int i)
@@ -202,7 +203,7 @@ public sealed class LuxAlgoAndPsarTradingStrategyShort : LuxAlgoAndPsarTradingSt
             else if (LastCandle.LuxAlgoSignal == LuxAlgoSignal.ExitSell)
             {
                 StopLoss = Math.Min(StopLoss, LastCandle.High * TradingParams.ExitSL);
-                base.PlaceNewStopLoss(StopLoss).Wait();
+                PlaceNewStopLoss(StopLoss).Wait();
 
                 ExitSignalPrice = Math.Min(LastCandle.Open, LastCandle.Close);
             }

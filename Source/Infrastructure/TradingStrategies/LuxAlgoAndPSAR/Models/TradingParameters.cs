@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AutomaticDotNETtrading.Infrastructure.Models;
+namespace AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 
 /// <summary>
 /// <para>Represents an object containing the trading parameters necessary for the trading method</para>
@@ -54,5 +54,5 @@ public class TradingParameters : ICloneable
 
     //// //// ////
 
-    public object Clone() => this.MemberwiseClone();
+    public object Clone() => MemberwiseClone();
 }

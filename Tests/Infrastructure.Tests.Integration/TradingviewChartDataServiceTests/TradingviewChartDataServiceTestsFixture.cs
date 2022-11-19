@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using AutomaticDotNETtrading.Infrastructure.Enums;
-using AutomaticDotNETtrading.Infrastructure.Models;
-
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enums;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 using Bogus;
 
 namespace Infrastructure.Tests.Integration.TradingviewChartDataServiceTests;

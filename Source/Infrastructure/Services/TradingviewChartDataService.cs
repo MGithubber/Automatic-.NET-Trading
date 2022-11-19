@@ -14,12 +14,13 @@ using OpenQA.Selenium.Support.UI;
 // // // CSV HELPER .NET // // //
 using CsvHelper;
 using CsvHelper.Configuration;
-using AutomaticDotNETtrading.Infrastructure.Models;
 using OpenQA.Selenium.Interactions;
 using AutomaticDotNETtrading.Application.Interfaces.Services;
 using AutomaticDotNETtrading.Domain.Models;
 using System.Reflection;
 using System.Text;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Mapping;
 
 namespace AutomaticDotNETtrading.Infrastructure.Services;
 
@@ -137,7 +138,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
                 ZoomInButton.Click();
         });
     }
-    private async Task ExportAndReadChartDataAsync()
+    internal async Task ExportAndReadChartDataAsync()
     {
         await Task.Run(() =>
         {
@@ -174,7 +175,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             using (StreamReader reader = new StreamReader(csv_file_path))
             using (CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                csv.Context.RegisterClassMap<CsvTVCandlestickTradingviewStyleMap>();
+                csv.Context.RegisterClassMap<CsvTVCandlestickMap>();
                 this.RegisteredTVCandlesticks = csv.GetRecords<TVCandlestick>().ToList();
                 this.RegisteredTVCandlesticks.ForEach(c => c.CurrencyPair = new CurrencyPair("ETH", "BUSD"));
             }
@@ -407,8 +408,12 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     private bool Disposed = false;
     public void Dispose()
     {
-        this.Dispose(true);
-        GC.SuppressFinalize(this);
+        try { this.Quit(); }
+        finally
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
     protected virtual void Dispose(bool disposing)
     {

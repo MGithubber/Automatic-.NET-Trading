@@ -1,10 +1,10 @@
 using AutomaticDotNETtrading.Application.Models;
 using AutomaticDotNETtrading.Domain.Models;
 using AutomaticDotNETtrading.Infrastructure.Data;
-using AutomaticDotNETtrading.Infrastructure.Models;
 using AutomaticDotNETtrading.Infrastructure.Services;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR;
-
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Implementations;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 using Binance.Net.Enums;
 using Binance.Net.Objects.Models.Futures;
 

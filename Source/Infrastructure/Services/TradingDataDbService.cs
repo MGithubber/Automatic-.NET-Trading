@@ -12,8 +12,8 @@ using Binance.Net.Objects.Models.Futures;
 using AutomaticDotNETtrading.Application.Interfaces.Services;
 using AutomaticDotNETtrading.Domain.Models;
 using AutomaticDotNETtrading.Infrastructure.Data;
-using AutomaticDotNETtrading.Infrastructure.Enums;
-using AutomaticDotNETtrading.Infrastructure.Models;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
+using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enums;
 
 namespace AutomaticDotNETtrading.Infrastructure.Services;
 
