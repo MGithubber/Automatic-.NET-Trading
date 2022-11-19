@@ -12,7 +12,7 @@ using Skender.Stock.Indicators;
 
 namespace AutomaticDotNETtrading.Application.Interfaces;
 
-public interface ITradingStrategy<TCandlestick> where TCandlestick : IQuote
+public interface ITradingStrategy<TCandlestick> : IDisposable where TCandlestick : IQuote
 {
     public ICfdTradingApiService ContractTrader { get; }
     

@@ -37,7 +37,7 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
     public BinanceCfdTradingApiService(CurrencyPair CurrencyPair, ApiCredentials ApiCredentials, decimal Leverage = 10)
     {
         this.CurrencyPair = CurrencyPair ?? throw new ArgumentNullException(nameof(CurrencyPair));
-
+        
         this.BinanceClient = new BinanceClient();
         this.BinanceClient.SetApiCredentials(ApiCredentials ?? throw new ArgumentNullException(nameof(ApiCredentials)));
         this.FuturesClient = this.BinanceClient.UsdFuturesApi;
@@ -265,5 +265,22 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
         
 
         return CallResult;
-    } 
+    }
+
+
+    //// //// ////
+    
+
+    public void Dispose()
+    {
+        try
+        {
+            this.FuturesClient?.Dispose();
+            this.BinanceClient.Dispose();
+        }
+        finally
+        {
+            GC.SuppressFinalize(this);
+        }
+    }
 }

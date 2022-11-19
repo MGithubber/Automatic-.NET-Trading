@@ -13,7 +13,7 @@ using CryptoExchange.Net.Objects;
 
 namespace AutomaticDotNETtrading.Application.Interfaces.Services;
 
-public interface ICfdTradingApiService
+public interface ICfdTradingApiService : IDisposable
 {
     public CurrencyPair CurrencyPair { get; }
     

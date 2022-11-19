@@ -113,4 +113,20 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
         this.LastOpenPrice = LastOpenPrice;
     }
     public abstract void MakeMove();
+
+
+    //// //// ////
+    
+    
+    public void Dispose()
+    {
+        try
+        {
+            this.ContractTrader.Dispose();
+        }
+        finally
+        {
+            GC.SuppressFinalize(this);
+        }
+    }
 }
