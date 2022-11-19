@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using AutomaticDotNETtrading.Application.Interfaces;
+using AutomaticDotNETtrading.Application.Interfaces.Services;
 using AutomaticDotNETtrading.Infrastructure.Enums;
 using AutomaticDotNETtrading.Infrastructure.Services;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enums;
@@ -15,7 +16,7 @@ namespace AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR
 
 public sealed class LuxAlgoAndPsarTradingStrategyShort : LuxAlgoAndPsarTradingStrategy
 {
-    public LuxAlgoAndPsarTradingStrategyShort(TradingParameters TradingParams, BinanceCfdTradingApiService ContractTrader) : base(TradingParams, ContractTrader)
+    public LuxAlgoAndPsarTradingStrategyShort(TradingParameters TradingParams, ICfdTradingApiService ContractTrader) : base(TradingParams, ContractTrader)
     {
         this.TradingParams.ExitSL = decimal.One + this.TradingParams.ExitSL / (decimal)100.0;
         this.TradingParams.ExitBreakeven = decimal.One - this.TradingParams.ExitBreakeven / (decimal)100.0;

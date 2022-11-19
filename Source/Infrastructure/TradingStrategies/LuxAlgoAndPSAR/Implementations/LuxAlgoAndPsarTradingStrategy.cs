@@ -23,7 +23,7 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
     public ICfdTradingApiService ContractTrader { get; }
     public TradingParameters TradingParams { get; }
 
-    public LuxAlgoAndPsarTradingStrategy(TradingParameters TradingParams, BinanceCfdTradingApiService ContractTrader)
+    public LuxAlgoAndPsarTradingStrategy(TradingParameters TradingParams, ICfdTradingApiService ContractTrader)
     {
         this.TradingParams = TradingParams;
         this.ContractTrader = ContractTrader;
@@ -37,12 +37,12 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
     public event EventHandler<LuxAlgoCandlestick>? OnStopOutDetected;
     public event EventHandler<KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>>? OnPositionClosed;
     public event EventHandler<Dictionary<LuxAlgoCandlestick, decimal>>? OnParabolicSARdivergence;
-
-    protected void OnPositionOpened_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, FuturesPosition> e) => OnPositionOpened?.Invoke(sender, e);
-    protected void OnStopLossUpdated_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder> e) => OnStopLossUpdated?.Invoke(sender, e);
-    protected void OnStopOutDetected_Invoke(object sender, LuxAlgoCandlestick e) => OnStopOutDetected?.Invoke(sender, e);
-    protected void OnPositionClosed_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder> e) => OnPositionClosed?.Invoke(sender, e);
-    protected void OnParabolicSARdivergence_Invoke(object sender, Dictionary<LuxAlgoCandlestick, decimal> e) => OnParabolicSARdivergence?.Invoke(sender, e);
+    
+    protected void OnPositionOpened_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, FuturesPosition> e) => this.OnPositionOpened?.Invoke(sender, e);
+    protected void OnStopLossUpdated_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder> e) => this.OnStopLossUpdated?.Invoke(sender, e);
+    protected void OnStopOutDetected_Invoke(object sender, LuxAlgoCandlestick e) => this.OnStopOutDetected?.Invoke(sender, e);
+    protected void OnPositionClosed_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder> e) => this.OnPositionClosed?.Invoke(sender, e);
+    protected void OnParabolicSARdivergence_Invoke(object sender, Dictionary<LuxAlgoCandlestick, decimal> e) => this.OnParabolicSARdivergence?.Invoke(sender, e);
     #endregion
 
     //// //// ////
