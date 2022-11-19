@@ -200,6 +200,7 @@ public sealed class LuxAlgoAndPsarTradingStrategyLong : LuxAlgoAndPsarTradingStr
             if (this.LastCandle.LuxAlgoSignal == LuxAlgoSignal.Sell || this.LastCandle.LuxAlgoSignal == LuxAlgoSignal.StrongSell)
             {
                 this.ClosePosition(this.LastOpenPrice);
+                this.LastTradedSignal = this.LastCandle.LuxAlgoSignal;
             }
             else if (this.LastCandle.LuxAlgoSignal == LuxAlgoSignal.ExitBuy)
             {

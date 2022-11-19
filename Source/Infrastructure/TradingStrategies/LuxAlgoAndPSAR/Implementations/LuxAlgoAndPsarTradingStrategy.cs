@@ -46,19 +46,19 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
     #endregion
 
     //// //// ////
-
-    protected LuxAlgoCandlestick[] Candlesticks = default!;
-    protected LuxAlgoCandlestick LastCandle = default!;
-    protected decimal LastOpenPrice;
-    protected TrendDirection TrendDirection;
-
+    
+    protected internal LuxAlgoCandlestick[] Candlesticks = default!;
+    protected internal LuxAlgoCandlestick LastCandle = default!;
+    protected internal decimal LastOpenPrice;
+    protected internal TrendDirection TrendDirection;
+    
     // Position status related members
-    protected bool StoppedOut;
-    protected decimal EntryPrice;
-    protected LuxAlgoSignal LastTradedSignal;
-    protected decimal StopLoss;
-    protected decimal ExitSignalPrice;
-
+    protected internal bool StoppedOut;
+    protected internal decimal EntryPrice;
+    protected internal LuxAlgoSignal LastTradedSignal;
+    protected internal decimal StopLoss;
+    protected internal decimal ExitSignalPrice;
+    
     protected void GetTrendDirection()
     {
         LuxAlgoSignal signal = this.LastCandle.LuxAlgoSignal;
@@ -85,8 +85,8 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
     protected async Task CloseFuturesPosition()
     {
         CallResult<BinanceFuturesOrder> CallResult = await this.ContractTrader.ClosePositionAsync();
-
-        if (!CallResult.Success)
+        
+        if (this.ContractTrader.Position is not null)
             throw new Exception($"Failed to close a futures order position");
 
         this.OnPositionClosed_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>(this.LastCandle, CallResult.Data));
