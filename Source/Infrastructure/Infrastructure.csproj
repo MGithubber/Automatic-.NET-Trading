@@ -24,9 +24,5 @@
 		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.EndToEnd" />
 		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests.System" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Models\" />
-	</ItemGroup>
 	
 </Project>
