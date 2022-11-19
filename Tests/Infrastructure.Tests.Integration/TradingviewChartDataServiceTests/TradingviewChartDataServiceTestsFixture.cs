@@ -12,9 +12,9 @@ namespace Infrastructure.Tests.Integration.TradingviewChartDataServiceTests;
 [TestFixture]
 public abstract class TradingviewChartDataServiceTestsFixture
 {
-    protected IChartDataService<TVCandlestick> SUT = new TradingviewChartDataService();
+    protected IChartDataService<LuxAlgoCandlestick> SUT = new TradingviewChartDataService();
     
-    protected readonly Faker<TVCandlestick> CandlesticksFaker = new Faker<TVCandlestick>()
+    protected readonly Faker<LuxAlgoCandlestick> CandlesticksFaker = new Faker<LuxAlgoCandlestick>()
     .RuleFor(c => c.CurrencyPair, f => new CurrencyPair(f.Finance.Currency().Code, f.Finance.Currency().Code))
     .RuleFor(c => c.Date, f => f.Date.Between(f.Date.Recent(5480), f.Date.Soon(5480)))
     .RuleFor(c => c.Open, f => f.Random.Decimal(1000, 3000))

@@ -17,7 +17,7 @@ using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enu
 
 namespace AutomaticDotNETtrading.Infrastructure.Services;
 
-public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
+public class TradingDataDbService : ITradingDataDbService<LuxAlgoCandlestick>
 {
     private readonly SqlDatabaseConnectionFactory ConnectionFactory;
     private SqlConnection? Connection;
@@ -27,7 +27,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
 
     //// //// ////
 
-    public int AddCandlestick(TVCandlestick Candlestick)
+    public int AddCandlestick(LuxAlgoCandlestick Candlestick)
     {
         try
         {
@@ -70,7 +70,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
         catch { throw; }
         finally { this.Connection?.Close(); }
     }
-    public int DeleteCandlestick(TVCandlestick Candlestick)
+    public int DeleteCandlestick(LuxAlgoCandlestick Candlestick)
     {
         try
         {
@@ -109,7 +109,7 @@ public class TradingDataDbService : ITradingDataDbService<TVCandlestick>
         finally { this.Connection?.Close(); }
     }
 
-    public void AddFuturesOrder(BinanceFuturesOrder FuturesOrder, TVCandlestick Candlestick, out int FuturesOrder_Id, out int Candlestick_Id)
+    public void AddFuturesOrder(BinanceFuturesOrder FuturesOrder, LuxAlgoCandlestick Candlestick, out int FuturesOrder_Id, out int Candlestick_Id)
     {
         try
         {

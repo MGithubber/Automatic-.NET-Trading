@@ -22,11 +22,11 @@ public abstract class TradingDataDbServiceTestsFixture
 {
     protected const string ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=\"Binance trading logs\";Integrated Security=True";
     protected readonly IDatabaseConnectionFactory<SqlConnection> ConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString);
-    protected readonly ITradingDataDbService<TVCandlestick> SUT = new TradingDataDbService(ConnectionString);
+    protected readonly ITradingDataDbService<LuxAlgoCandlestick> SUT = new TradingDataDbService(ConnectionString);
     protected Respawner DbRespawner = default!; // will clear all data in the database when ResetAsync is called
 
 
-    protected readonly Faker<TVCandlestick> CandlesticksFaker = new Faker<TVCandlestick>()
+    protected readonly Faker<LuxAlgoCandlestick> CandlesticksFaker = new Faker<LuxAlgoCandlestick>()
         .RuleFor(c => c.CurrencyPair, f => new CurrencyPair(f.Finance.Currency().Code, f.Finance.Currency().Code))
         .RuleFor(c => c.Date, f => f.Date.Between(f.Date.Recent(5480), f.Date.Soon(5480)))
         .RuleFor(c => c.Open, f => f.Random.Decimal(1000, 3000))

@@ -28,7 +28,7 @@ public partial class AutomaticTradingDotNetForm : Form
 
     //// //// //// //// //// //// //// ////
 
-    private MPoolTradingService<TVCandlestick, SqlConnection>? MPoolTradingService;
+    private MPoolTradingService<LuxAlgoCandlestick, SqlConnection>? MPoolTradingService;
     private async Task StartPoolTradingAsync()
     {
         static TradingviewChartDataService Create_TradingviewDataExtractor()
@@ -87,7 +87,7 @@ public partial class AutomaticTradingDotNetForm : Form
             LuxAlgoPsar.OnPositionClosed += LuxAlgoPsar_OnPositionClosed;
         });
         #region LuxAlgoAndPsarTradingStrategy events
-        void LuxAlgoPsar_OnPositionOpened(object? sender, KeyValuePair<TVCandlestick, FuturesPosition> e)
+        void LuxAlgoPsar_OnPositionOpened(object? sender, KeyValuePair<LuxAlgoCandlestick, FuturesPosition> e)
         {
             Task.Run(() =>
             {
@@ -109,7 +109,7 @@ public partial class AutomaticTradingDotNetForm : Form
                 this.OutputTextBox.BeginInvoke(() => this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings());
             });
         }
-        void LuxAlgoPsar_OnStopLossUpdated(object? sender, KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder> e)
+        void LuxAlgoPsar_OnStopLossUpdated(object? sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder> e)
         {
             Task.Run(() =>
             {
@@ -126,7 +126,7 @@ public partial class AutomaticTradingDotNetForm : Form
                 this.OutputTextBox.BeginInvoke(() => this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings());
             });
         }
-        void LuxAlgoPsar_OnStopOutDetected(object? sender, TVCandlestick e)
+        void LuxAlgoPsar_OnStopOutDetected(object? sender, LuxAlgoCandlestick e)
         {
             Task.Run(() =>
             {
@@ -137,7 +137,7 @@ public partial class AutomaticTradingDotNetForm : Form
                 this.OutputTextBox.BeginInvoke(() => this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings());
             });
         }
-        void LuxAlgoPsar_OnPositionClosed(object? sender, KeyValuePair<TVCandlestick, BinanceFuturesOrder> e)
+        void LuxAlgoPsar_OnPositionClosed(object? sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder> e)
         {
             Task.Run(() =>
             {
@@ -167,7 +167,7 @@ public partial class AutomaticTradingDotNetForm : Form
         //// ////
 
         this.MPoolTradingService = new(TradingviewChartDataService, TradingDataDbService, LuxAlgoPsarMethodsList.ToArray());
-        this.MPoolTradingService.OnNewCandlestickRegistered += new EventHandler<TVCandlestick>((sender, e) =>
+        this.MPoolTradingService.OnNewCandlestickRegistered += new EventHandler<LuxAlgoCandlestick>((sender, e) =>
         {
             Task.Run(() =>
             {

@@ -14,7 +14,7 @@ public class DeleteCandlestickTests : TradingDataDbServiceTestsFixture
     public void DeleteCandlestick_DeletesCandlestick_WhenCandlestickExists()
     {
         // Arrange
-        TVCandlestick canlestick = this.CandlesticksFaker.Generate();
+        LuxAlgoCandlestick canlestick = this.CandlesticksFaker.Generate();
         int idAdded = this.SUT.AddCandlestick(canlestick);
         
         // Act
@@ -28,7 +28,7 @@ public class DeleteCandlestickTests : TradingDataDbServiceTestsFixture
     public void DeleteCandlestick_ThrowsArgumentException_WhenCandlestickDoesNotExist()
     {
         // Arrange
-        TVCandlestick canlestick = this.CandlesticksFaker.Generate();
+        LuxAlgoCandlestick canlestick = this.CandlesticksFaker.Generate();
 
         // Assert
         Action action = () => this.SUT.DeleteCandlestick(canlestick);

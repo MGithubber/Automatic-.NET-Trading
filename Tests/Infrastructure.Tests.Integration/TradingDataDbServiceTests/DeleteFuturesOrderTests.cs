@@ -15,7 +15,7 @@ public class DeleteFuturesOrderTests : TradingDataDbServiceTestsFixture
     public void DeleteFuturesOrder_DeletesFuturesOrder_IfFuturesOrderExists()
     {
         // Arrange
-        TVCandlestick candlestick = this.CandlesticksFaker.Generate();
+        LuxAlgoCandlestick candlestick = this.CandlesticksFaker.Generate();
         BinanceFuturesOrder order = this.FuturesOrdersFaker.Generate();
         order.CreateTime = candlestick.Date;
         order.Symbol = candlestick.CurrencyPair.Name;

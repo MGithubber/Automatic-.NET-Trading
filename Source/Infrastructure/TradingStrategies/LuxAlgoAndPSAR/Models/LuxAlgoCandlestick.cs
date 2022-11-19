@@ -14,9 +14,9 @@ using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enu
 namespace AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 
 /// <summary>
-/// Represents a mutable object that contains the data window elements for a candlestick from https://www.tradingview.com
+/// Represents a mutable object that contains that inherits <see cref="Candlestick"/> and provides a LuxAlgo signal
 /// </summary>
-public class TVCandlestick : Candlestick
+public class LuxAlgoCandlestick : Candlestick
 {
     // LuxAlgo indicator values
     public bool Buy { get; set; } = false;
@@ -29,7 +29,7 @@ public class TVCandlestick : Candlestick
     {
         get
         {
-            PropertyInfo[] properties = typeof(TVCandlestick).GetProperties().Where(prop => Enum.IsDefined(typeof(LuxAlgoSignal), prop.Name)).ToArray();
+            PropertyInfo[] properties = typeof(LuxAlgoCandlestick).GetProperties().Where(prop => Enum.IsDefined(typeof(LuxAlgoSignal), prop.Name)).ToArray();
             foreach (PropertyInfo property in properties)
                 if (Enum.TryParse(property.Name, out LuxAlgoSignal signal))
                 {

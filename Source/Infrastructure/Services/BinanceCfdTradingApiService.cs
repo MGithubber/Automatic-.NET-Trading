@@ -190,7 +190,7 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
     }
     public async Task<CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>>> OpenPositionAtMarketPriceAsync(OrderSide OrderSide, decimal MarginBUSD = decimal.MaxValue, decimal? StopLoss_price = null, decimal? TakeProfit_price = null)
     {
-        (decimal BaseQuantity, decimal CurrentPrice) = await Get_BaseQuantity_and_CurrentPrice_Async(MarginBUSD);
+        (decimal BaseQuantity, decimal CurrentPrice) = await this.Get_BaseQuantity_and_CurrentPrice_Async(MarginBUSD);
 
         ArgumentError? error = ValidateInput(OrderSide, StopLoss_price, TakeProfit_price, CurrentPrice);
         if (error != null)
@@ -198,14 +198,14 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
             return new(error);
         }
                 
-        List<BinanceFuturesBatchOrder> BatchOrders = CreateBinanceBatchOrders(OrderSide, StopLoss_price, TakeProfit_price, BaseQuantity);
+        List<BinanceFuturesBatchOrder> BatchOrders = this.CreateBinanceBatchOrders(OrderSide, StopLoss_price, TakeProfit_price, BaseQuantity);
         CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>> CallResult = await this.TradingClient.PlaceMultipleOrdersAsync(orders: BatchOrders.ToArray());
         if (!CallResult.Success)
         {
             return CallResult;
         }
         
-        this.Position = CreateFuturesPosition(CallResult, MarginBUSD);
+        this.Position = this.CreateFuturesPosition(CallResult, MarginBUSD);
 
         return CallResult;
     }
@@ -258,7 +258,7 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
         Task<CallResult<BinanceFuturesOrder>> GetFuturesOrderTask = this.GetOrderAsync(CallResult.Data.Id);
         if (this.Position.StopLossOrder is not null)
         {
-            await this.TradingClient.CancelOrderAsync(symbol: CurrencyPair.Name, this.Position.StopLossOrder.Id);
+            await this.TradingClient.CancelOrderAsync(symbol: this.CurrencyPair.Name, this.Position.StopLossOrder.Id);
         }
 
         this.Position.StopLossOrder = (await GetFuturesOrderTask).Data;

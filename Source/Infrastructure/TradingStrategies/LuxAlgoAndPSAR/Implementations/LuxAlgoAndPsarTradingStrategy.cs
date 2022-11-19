@@ -18,7 +18,7 @@ using Skender.Stock.Indicators;
 
 namespace AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Implementations;
 
-public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandlestick>
+public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCandlestick>
 {
     public ICfdTradingApiService ContractTrader { get; }
     public TradingParameters TradingParams { get; }
@@ -32,23 +32,23 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandles
     //// //// //// ////
 
     #region Events
-    public event EventHandler<KeyValuePair<TVCandlestick, FuturesPosition>>? OnPositionOpened;
-    public event EventHandler<KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder>>? OnStopLossUpdated;
-    public event EventHandler<TVCandlestick>? OnStopOutDetected;
-    public event EventHandler<KeyValuePair<TVCandlestick, BinanceFuturesOrder>>? OnPositionClosed;
-    public event EventHandler<Dictionary<TVCandlestick, decimal>>? OnParabolicSARdivergence;
+    public event EventHandler<KeyValuePair<LuxAlgoCandlestick, FuturesPosition>>? OnPositionOpened;
+    public event EventHandler<KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder>>? OnStopLossUpdated;
+    public event EventHandler<LuxAlgoCandlestick>? OnStopOutDetected;
+    public event EventHandler<KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>>? OnPositionClosed;
+    public event EventHandler<Dictionary<LuxAlgoCandlestick, decimal>>? OnParabolicSARdivergence;
 
-    protected void OnPositionOpened_Invoke(object sender, KeyValuePair<TVCandlestick, FuturesPosition> e) => OnPositionOpened?.Invoke(sender, e);
-    protected void OnStopLossUpdated_Invoke(object sender, KeyValuePair<TVCandlestick, BinanceFuturesPlacedOrder> e) => OnStopLossUpdated?.Invoke(sender, e);
-    protected void OnStopOutDetected_Invoke(object sender, TVCandlestick e) => OnStopOutDetected?.Invoke(sender, e);
-    protected void OnPositionClosed_Invoke(object sender, KeyValuePair<TVCandlestick, BinanceFuturesOrder> e) => OnPositionClosed?.Invoke(sender, e);
-    protected void OnParabolicSARdivergence_Invoke(object sender, Dictionary<TVCandlestick, decimal> e) => OnParabolicSARdivergence?.Invoke(sender, e);
+    protected void OnPositionOpened_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, FuturesPosition> e) => OnPositionOpened?.Invoke(sender, e);
+    protected void OnStopLossUpdated_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder> e) => OnStopLossUpdated?.Invoke(sender, e);
+    protected void OnStopOutDetected_Invoke(object sender, LuxAlgoCandlestick e) => OnStopOutDetected?.Invoke(sender, e);
+    protected void OnPositionClosed_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder> e) => OnPositionClosed?.Invoke(sender, e);
+    protected void OnParabolicSARdivergence_Invoke(object sender, Dictionary<LuxAlgoCandlestick, decimal> e) => OnParabolicSARdivergence?.Invoke(sender, e);
     #endregion
 
     //// //// ////
 
-    protected TVCandlestick[] Candlesticks = default!;
-    protected TVCandlestick LastCandle = default!;
+    protected LuxAlgoCandlestick[] Candlesticks = default!;
+    protected LuxAlgoCandlestick LastCandle = default!;
     protected decimal LastOpenPrice;
     protected TrendDirection TrendDirection;
 
@@ -61,55 +61,55 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<TVCandles
 
     protected void GetTrendDirection()
     {
-        LuxAlgoSignal signal = LastCandle.LuxAlgoSignal;
+        LuxAlgoSignal signal = this.LastCandle.LuxAlgoSignal;
 
         if (signal == LuxAlgoSignal.Buy || signal == LuxAlgoSignal.StrongBuy)
-            TrendDirection = TrendDirection.Uptrend;
+            this.TrendDirection = TrendDirection.Uptrend;
         else if (signal == LuxAlgoSignal.Sell || signal == LuxAlgoSignal.StrongSell)
-            TrendDirection = TrendDirection.Downtrend;
+            this.TrendDirection = TrendDirection.Downtrend;
     }
 
-    protected decimal[] GetParabolicSAR() => Candlesticks.GetParabolicSar().Select(res => res.Sar.HasValue ? Convert.ToDecimal(res.Sar.Value) : decimal.Zero).ToArray();
+    protected decimal[] GetParabolicSAR() => this.Candlesticks.GetParabolicSar().Select(res => res.Sar.HasValue ? Convert.ToDecimal(res.Sar.Value) : decimal.Zero).ToArray();
 
 
     #region IFuturesPairTradingApiService calls
     protected async Task OpenFuturesPosition(OrderSide OrderSide, decimal? StopLoss_price = null, decimal? TakeProfit_price = null)
     {
-        CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>> CallResult = await ContractTrader.OpenPositionAtMarketPriceAsync(OrderSide, decimal.MaxValue, StopLoss_price, TakeProfit_price);
+        CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>> CallResult = await this.ContractTrader.OpenPositionAtMarketPriceAsync(OrderSide, decimal.MaxValue, StopLoss_price, TakeProfit_price);
 
-        if (ContractTrader.Position is null)
-            throw new Exception($"Failed to open a futures order position on {nameof(OrderSide)} {OrderSide}", new NullReferenceException(nameof(ContractTrader.Position)));
+        if (this.ContractTrader.Position is null)
+            throw new Exception($"Failed to open a futures order position on {nameof(OrderSide)} {OrderSide}", new NullReferenceException(nameof(this.ContractTrader.Position)));
 
-        OnPositionOpened_Invoke(this, new KeyValuePair<TVCandlestick, FuturesPosition>(LastCandle, ContractTrader.Position));
+        this.OnPositionOpened_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, FuturesPosition>(this.LastCandle, this.ContractTrader.Position));
     }
     protected async Task CloseFuturesPosition()
     {
-        CallResult<BinanceFuturesOrder> CallResult = await ContractTrader.ClosePositionAsync();
+        CallResult<BinanceFuturesOrder> CallResult = await this.ContractTrader.ClosePositionAsync();
 
         if (!CallResult.Success)
             throw new Exception($"Failed to close a futures order position");
 
-        OnPositionClosed_Invoke(this, new KeyValuePair<TVCandlestick, BinanceFuturesOrder>(LastCandle, CallResult.Data));
+        this.OnPositionClosed_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>(this.LastCandle, CallResult.Data));
     }
     protected async Task PlaceNewStopLoss(decimal price)
     {
-        CallResult<BinanceFuturesPlacedOrder> CallResult = await ContractTrader.PlaceStopLossAsync(price);
+        CallResult<BinanceFuturesPlacedOrder> CallResult = await this.ContractTrader.PlaceStopLossAsync(price);
 
-        _ = ContractTrader.Position ?? throw new NullReferenceException($"{nameof(ContractTrader.Position)} was NULL");
-        if (ContractTrader.Position.StopLossOrder is null)
-            throw new Exception($"Failed to place a futures stop loss order", new NullReferenceException(nameof(ContractTrader.Position)));
+        _ = this.ContractTrader.Position ?? throw new NullReferenceException($"{nameof(this.ContractTrader.Position)} was NULL");
+        if (this.ContractTrader.Position.StopLossOrder is null)
+            throw new Exception($"Failed to place a futures stop loss order", new NullReferenceException(nameof(this.ContractTrader.Position)));
 
-        OnPositionClosed_Invoke(this, new KeyValuePair<TVCandlestick, BinanceFuturesOrder>(LastCandle, ContractTrader.Position.StopLossOrder));
+        this.OnPositionClosed_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>(this.LastCandle, this.ContractTrader.Position.StopLossOrder));
     }
 
-    protected bool IsInPosition() => ContractTrader.IsInPosition();
+    protected bool IsInPosition() => this.ContractTrader.IsInPosition();
     #endregion
 
 
-    public virtual void SendData(TVCandlestick[] Candlesticks, decimal LastOpenPrice)
+    public virtual void SendData(LuxAlgoCandlestick[] Candlesticks, decimal LastOpenPrice)
     {
         this.Candlesticks = Candlesticks;
-        LastCandle = Candlesticks.Last();
+        this.LastCandle = Candlesticks.Last();
         this.LastOpenPrice = LastOpenPrice;
     }
     public abstract void MakeMove();

@@ -54,5 +54,5 @@ public class TradingParameters : ICloneable
 
     //// //// ////
 
-    public object Clone() => MemberwiseClone();
+    public object Clone() => this.MemberwiseClone();
 }

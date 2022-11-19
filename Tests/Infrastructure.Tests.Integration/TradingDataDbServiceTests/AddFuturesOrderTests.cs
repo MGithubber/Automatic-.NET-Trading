@@ -16,7 +16,7 @@ public class AddFuturesOrderTests : TradingDataDbServiceTestsFixture
     public void AddFuturesOrder_AddsFuturesOrder_IfFuturesOrderDoesNotExistAndIsValid()
     {
         // Arrange
-        TVCandlestick candlestick = this.CandlesticksFaker.Generate();
+        LuxAlgoCandlestick candlestick = this.CandlesticksFaker.Generate();
         BinanceFuturesOrder order = this.FuturesOrdersFaker.Generate();
         order.CreateTime = candlestick.Date;
         order.Symbol = candlestick.CurrencyPair.Name;
@@ -33,7 +33,7 @@ public class AddFuturesOrderTests : TradingDataDbServiceTestsFixture
     public void AddFuturesOrder_DoesNotAddFuturesOrder_AlreadyExists()
     {
         // Arrange
-        TVCandlestick candlestick = this.CandlesticksFaker.Generate();
+        LuxAlgoCandlestick candlestick = this.CandlesticksFaker.Generate();
         BinanceFuturesOrder order = this.FuturesOrdersFaker.Generate();
         order.CreateTime = candlestick.Date;
         order.Symbol = candlestick.CurrencyPair.Name;

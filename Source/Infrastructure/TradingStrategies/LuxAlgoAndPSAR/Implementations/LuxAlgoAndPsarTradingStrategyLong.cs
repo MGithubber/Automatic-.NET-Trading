@@ -27,47 +27,47 @@ public sealed class LuxAlgoAndPsarTradingStrategyLong : LuxAlgoAndPsarTradingStr
 
         // // //
 
-        StoppedOut = false;
-        EntryPrice = 0;
-        LastTradedSignal = LuxAlgoSignal.Hold;
-        StopLoss = 0;
-        ExitSignalPrice = long.MaxValue;
+        this.StoppedOut = false;
+        this.EntryPrice = 0;
+        this.LastTradedSignal = LuxAlgoSignal.Hold;
+        this.StopLoss = 0;
+        this.ExitSignalPrice = long.MaxValue;
     }
 
     //// //// //// ////
 
     private void TrailingStopLoss(int i)
     {
-        if (StopLoss < EntryPrice)
-            if (TradingParams.Breakeven * EntryPrice < LastOpenPrice)
+        if (this.StopLoss < this.EntryPrice)
+            if (this.TradingParams.Breakeven * this.EntryPrice < this.LastOpenPrice)
             {
-                StopLoss = EntryPrice;
-                PlaceNewStopLoss(StopLoss).Wait();
+                this.StopLoss = this.EntryPrice;
+                this.PlaceNewStopLoss(this.StopLoss).Wait();
             }
 
-        if (StopLoss < ExitSignalPrice)
-            if (TradingParams.ExitBreakeven * ExitSignalPrice < LastOpenPrice)
+        if (this.StopLoss < this.ExitSignalPrice)
+            if (this.TradingParams.ExitBreakeven * this.ExitSignalPrice < this.LastOpenPrice)
             {
-                StopLoss = ExitSignalPrice;
-                PlaceNewStopLoss(StopLoss).Wait();
+                this.StopLoss = this.ExitSignalPrice;
+                this.PlaceNewStopLoss(this.StopLoss).Wait();
             }
 
-        decimal sl_close = LastCandle.Open * TradingParams.AscendingCloses_or_DescendingCloses;
-        decimal sl_low = LastCandle.Low * TradingParams.AscendingLows_or_DescendingHighs;
+        decimal sl_close = this.LastCandle.Open * this.TradingParams.AscendingCloses_or_DescendingCloses;
+        decimal sl_low = this.LastCandle.Low * this.TradingParams.AscendingLows_or_DescendingHighs;
 
         bool ascending_closes = true;
         bool ascending_lows = true;
 
         #region conditions determining
         for (int x = 1; x <= 4; x++)
-            if (Candlesticks[i - x - 1].Close > Candlesticks[i - x].Close)
+            if (this.Candlesticks[i - x - 1].Close > this.Candlesticks[i - x].Close)
             {
                 ascending_closes = false;
                 break;
             }
 
         for (int x = 1; x <= 4; x++)
-            if (Candlesticks[i - x - 1].Low > Candlesticks[i - x].Low)
+            if (this.Candlesticks[i - x - 1].Low > this.Candlesticks[i - x].Low)
             {
                 ascending_lows = false;
                 break;
@@ -75,59 +75,59 @@ public sealed class LuxAlgoAndPsarTradingStrategyLong : LuxAlgoAndPsarTradingStr
         #endregion
 
         #region conditions based trading actions
-        if (ascending_closes && StopLoss < sl_close && sl_close < LastOpenPrice)
+        if (ascending_closes && this.StopLoss < sl_close && sl_close < this.LastOpenPrice)
         {
-            StopLoss = Math.Max(StopLoss, sl_close);
-            PlaceNewStopLoss(StopLoss).Wait();
+            this.StopLoss = Math.Max(this.StopLoss, sl_close);
+            this.PlaceNewStopLoss(this.StopLoss).Wait();
         }
-        else if (ascending_lows && StopLoss < sl_low && sl_low < LastOpenPrice)
+        else if (ascending_lows && this.StopLoss < sl_low && sl_low < this.LastOpenPrice)
         {
-            StopLoss = Math.Max(StopLoss, sl_low);
-            PlaceNewStopLoss(StopLoss).Wait();
+            this.StopLoss = Math.Max(this.StopLoss, sl_low);
+            this.PlaceNewStopLoss(this.StopLoss).Wait();
         }
         #endregion
     }
 
     private void OpenPosition()
     {
-        StoppedOut = false;
-        EntryPrice = LastOpenPrice;
-        StopLoss = Math.Max(EntryPrice * TradingParams.WorstCaseSL, LastCandle.Low * TradingParams.OriginalSL);
+        this.StoppedOut = false;
+        this.EntryPrice = this.LastOpenPrice;
+        this.StopLoss = Math.Max(this.EntryPrice * this.TradingParams.WorstCaseSL, this.LastCandle.Low * this.TradingParams.OriginalSL);
 
-        OpenFuturesPosition(OrderSide.Buy, StopLoss).Wait();
+        this.OpenFuturesPosition(OrderSide.Buy, this.StopLoss).Wait();
     }
     private void ClosePosition(decimal exit_prc)
     {
-        StoppedOut = false;
-        EntryPrice = 0;
-        StopLoss = 0;
-        ExitSignalPrice = long.MaxValue;
+        this.StoppedOut = false;
+        this.EntryPrice = 0;
+        this.StopLoss = 0;
+        this.ExitSignalPrice = long.MaxValue;
 
-        CloseFuturesPosition().Wait();
+        this.CloseFuturesPosition().Wait();
     }
     private void stop_out_position_long(decimal stop_loss_prc)
     {
-        StoppedOut = true;
-        EntryPrice = 0;
-        StopLoss = 0;
-        ExitSignalPrice = long.MaxValue;
+        this.StoppedOut = true;
+        this.EntryPrice = 0;
+        this.StopLoss = 0;
+        this.ExitSignalPrice = long.MaxValue;
 
-        OnStopOutDetected_Invoke(this, LastCandle);
+        this.OnStopOutDetected_Invoke(this, this.LastCandle);
     }
 
     private bool ParabolicSarDivergence(int i)
     {
-        if (LastCandle.IsBullish) // checks for divergence if a bullish candle has formed
+        if (this.LastCandle.IsBullish) // checks for divergence if a bullish candle has formed
         {
-            decimal[] PsarValues = GetParabolicSAR();
+            decimal[] PsarValues = this.GetParabolicSAR();
 
             int bullish_candle_index = -1;
             int divergence_length = 0; // nr. candles in the divergence from candles[bullish_candle_index] to candles[i - 2]
 
-            for (int j = i - 2; Candlesticks[j].LuxAlgoSignal != LastTradedSignal; j--)
+            for (int j = i - 2; this.Candlesticks[j].LuxAlgoSignal != this.LastTradedSignal; j--)
             {
                 divergence_length++;
-                if (Candlesticks[j].IsBullish && PsarValues[j] < PsarValues[j + 1])
+                if (this.Candlesticks[j].IsBullish && PsarValues[j] < PsarValues[j + 1])
                 {
                     bullish_candle_index = j;
                     break;
@@ -135,24 +135,24 @@ public sealed class LuxAlgoAndPsarTradingStrategyLong : LuxAlgoAndPsarTradingStr
             }
 
             if (bullish_candle_index != -1 && divergence_length > 3)
-                if (Candlesticks[bullish_candle_index].Close > Candlesticks[i - 2].Close && PsarValues[bullish_candle_index] < PsarValues[i - 2])
+                if (this.Candlesticks[bullish_candle_index].Close > this.Candlesticks[i - 2].Close && PsarValues[bullish_candle_index] < PsarValues[i - 2])
                 {
-                    Dictionary<TVCandlestick, decimal> dict = new Dictionary<TVCandlestick, decimal>();
+                    Dictionary<LuxAlgoCandlestick, decimal> dict = new Dictionary<LuxAlgoCandlestick, decimal>();
                     try
                     {
-                        List<TVCandlestick> divergenceCandles = Candlesticks.ToList().GetRange(bullish_candle_index, Candlesticks.Length - bullish_candle_index);
-                        List<decimal> divergencePsars = PsarValues.ToList().GetRange(bullish_candle_index, Candlesticks.Length - bullish_candle_index);
+                        List<LuxAlgoCandlestick> divergenceCandles = this.Candlesticks.ToList().GetRange(bullish_candle_index, this.Candlesticks.Length - bullish_candle_index);
+                        List<decimal> divergencePsars = PsarValues.ToList().GetRange(bullish_candle_index, this.Candlesticks.Length - bullish_candle_index);
 
                         for (int divIndex = 0; divIndex < divergenceCandles.Count; divIndex++)
                             dict.Add(divergenceCandles[divIndex], divergencePsars[divIndex]);
                     }
                     catch
                     {
-                        dict.Add(Candlesticks[bullish_candle_index], PsarValues[bullish_candle_index]);
-                        dict.Add(LastCandle, PsarValues.Last());
+                        dict.Add(this.Candlesticks[bullish_candle_index], PsarValues[bullish_candle_index]);
+                        dict.Add(this.LastCandle, PsarValues.Last());
                     }
 
-                    OnParabolicSARdivergence_Invoke(this, dict);
+                    this.OnParabolicSARdivergence_Invoke(this, dict);
                     return true;
                 }
         }
@@ -162,50 +162,50 @@ public sealed class LuxAlgoAndPsarTradingStrategyLong : LuxAlgoAndPsarTradingStr
 
     public override void MakeMove()
     {
-        int i = Candlesticks.Length - 1;
+        int i = this.Candlesticks.Length - 1;
 
-        GetTrendDirection();
+        this.GetTrendDirection();
 
         // // // //
 
-        if (StopLoss != 0)
+        if (this.StopLoss != 0)
         {
             // old condition: Math.Min(LastCandle.Low, LastOpenPrice) >= StopLoss
-            if (!IsInPosition())
+            if (!this.IsInPosition())
             {
-                stop_out_position_long(StopLoss);
+                this.stop_out_position_long(this.StopLoss);
                 goto LuxAlgo_signal_check;
             }
 
-            TrailingStopLoss(i);
+            this.TrailingStopLoss(i);
         }
 
     LuxAlgo_signal_check:
 
-        if (StopLoss == 0) // currently not in position
+        if (this.StopLoss == 0) // currently not in position
         {
-            if (LastCandle.LuxAlgoSignal == LuxAlgoSignal.Buy || LastCandle.LuxAlgoSignal == LuxAlgoSignal.StrongBuy || LastCandle.LuxAlgoSignal == LuxAlgoSignal.ExitSell)
+            if (this.LastCandle.LuxAlgoSignal == LuxAlgoSignal.Buy || this.LastCandle.LuxAlgoSignal == LuxAlgoSignal.StrongBuy || this.LastCandle.LuxAlgoSignal == LuxAlgoSignal.ExitSell)
             {
-                OpenPosition();
-                LastTradedSignal = LastCandle.LuxAlgoSignal;
+                this.OpenPosition();
+                this.LastTradedSignal = this.LastCandle.LuxAlgoSignal;
             }
-            else if (TrendDirection == TrendDirection.Uptrend && StoppedOut == true && ParabolicSarDivergence(i))
+            else if (this.TrendDirection == TrendDirection.Uptrend && this.StoppedOut == true && this.ParabolicSarDivergence(i))
             {
-                OpenPosition();
+                this.OpenPosition();
             }
         }
         else // position is currently open
         {
-            if (LastCandle.LuxAlgoSignal == LuxAlgoSignal.Sell || LastCandle.LuxAlgoSignal == LuxAlgoSignal.StrongSell)
+            if (this.LastCandle.LuxAlgoSignal == LuxAlgoSignal.Sell || this.LastCandle.LuxAlgoSignal == LuxAlgoSignal.StrongSell)
             {
-                ClosePosition(LastOpenPrice);
+                this.ClosePosition(this.LastOpenPrice);
             }
-            else if (LastCandle.LuxAlgoSignal == LuxAlgoSignal.ExitBuy)
+            else if (this.LastCandle.LuxAlgoSignal == LuxAlgoSignal.ExitBuy)
             {
-                StopLoss = Math.Max(StopLoss, LastCandle.Low * TradingParams.ExitSL);
-                PlaceNewStopLoss(StopLoss).Wait();
+                this.StopLoss = Math.Max(this.StopLoss, this.LastCandle.Low * this.TradingParams.ExitSL);
+                this.PlaceNewStopLoss(this.StopLoss).Wait();
 
-                ExitSignalPrice = Math.Max(LastCandle.Open, LastCandle.Close);
+                this.ExitSignalPrice = Math.Max(this.LastCandle.Open, this.LastCandle.Close);
             }
         }
     }

@@ -53,7 +53,7 @@ internal static class IWebDriverExtensions
 /// <summary>
 /// Represents an immutable object providing methods for extracting chart data from https://www.tradingview.com using google chrome
 /// </summary>
-public class TradingviewChartDataService : IChartDataService<TVCandlestick>
+public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
 {
     private readonly ChromeOptions ChromeOptions;
     private readonly ChromeDriver ChromeDriver;
@@ -120,8 +120,8 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
     private readonly WebElement Chart;
 
     
-    private List<TVCandlestick> RegisteredTVCandlesticks = new List<TVCandlestick>();
-    public TVCandlestick[] Candlesticks => this.RegisteredTVCandlesticks.ToArray();
+    private List<LuxAlgoCandlestick> RegisteredTVCandlesticks = new List<LuxAlgoCandlestick>();
+    public LuxAlgoCandlestick[] Candlesticks => this.RegisteredTVCandlesticks.ToArray();
 
     ////  ////  ////
     
@@ -176,7 +176,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             using (CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 csv.Context.RegisterClassMap<CsvTVCandlestickMap>();
-                this.RegisteredTVCandlesticks = csv.GetRecords<TVCandlestick>().ToList();
+                this.RegisteredTVCandlesticks = csv.GetRecords<LuxAlgoCandlestick>().ToList();
                 this.RegisteredTVCandlesticks.ForEach(c => c.CurrencyPair = new CurrencyPair("ETH", "BUSD"));
             }
 
@@ -185,7 +185,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         });
     }
     
-    private TVCandlestick DataWindow_text_to_Candlestick(string data_window_text)
+    private LuxAlgoCandlestick DataWindow_text_to_Candlestick(string data_window_text)
     {
         List<string> data_window_lines = data_window_text.Replace("\r\n", "\n").Split('\n').ToList();
         
@@ -230,7 +230,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         //};
         #endregion
 
-        return new TVCandlestick
+        return new LuxAlgoCandlestick
         {
             CurrencyPair = new CurrencyPair("ETH", "BUSD"),
 
@@ -249,7 +249,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             ExitSell = double.Parse(data_window_lines[11].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture)
         };
     }
-    private async Task<TVCandlestick> GetLastCompleteCandlestickAsync()
+    private async Task<LuxAlgoCandlestick> GetLastCompleteCandlestickAsync()
     {
         return await Task.Run(() =>
         {
@@ -279,7 +279,7 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             #endregion
         });
     }
-    private async Task<TVCandlestick> GetUnfinishedCandlestickAsync()
+    private async Task<LuxAlgoCandlestick> GetUnfinishedCandlestickAsync()
     {
         return await Task.Run(() =>
         {
@@ -310,15 +310,15 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
         });
     }
     
-    public async Task<TVCandlestick> WaitForNextCandleAsync()
+    public async Task<LuxAlgoCandlestick> WaitForNextCandleAsync()
     {
         try
         {
             await this.Semaphore.WaitAsync();
             
 
-            TVCandlestick LastCandle = await this.GetUnfinishedCandlestickAsync();
-            TVCandlestick LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
+            LuxAlgoCandlestick LastCandle = await this.GetUnfinishedCandlestickAsync();
+            LuxAlgoCandlestick LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
             TimeSpan difference = LastCandle.Date - LastCompleteCandle.Date;
 
             // holds the program here until a new candlestick has been completed
@@ -334,11 +334,11 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
             this.Semaphore.Release();
         }
     }
-    public async Task<TVCandlestick> WaitForNextMatchingCandleAsync(params Predicate<TVCandlestick>[] matches)
+    public async Task<LuxAlgoCandlestick> WaitForNextMatchingCandleAsync(params Predicate<LuxAlgoCandlestick>[] matches)
     {
-        bool OneMatches(TVCandlestick candle, IEnumerable<Predicate<TVCandlestick>> match_arr)
+        bool OneMatches(LuxAlgoCandlestick candle, IEnumerable<Predicate<LuxAlgoCandlestick>> match_arr)
         {
-            foreach (Predicate<TVCandlestick> match in matches)
+            foreach (Predicate<LuxAlgoCandlestick> match in matches)
                 if (match.Invoke(candle))
                     return true;
             return false;
@@ -357,10 +357,10 @@ public class TradingviewChartDataService : IChartDataService<TVCandlestick>
                 throw new ArgumentException($"No predicate was specified for {nameof(matches)}");
             #endregion
 
-            TVCandlestick LastCompleteCandle;
+            LuxAlgoCandlestick LastCompleteCandle;
             do
             {
-                LastCompleteCandle = await WaitForNextCandleAsync();
+                LastCompleteCandle = await this.WaitForNextCandleAsync();
             } while (!OneMatches(LastCompleteCandle, matches));
 
             return LastCompleteCandle;

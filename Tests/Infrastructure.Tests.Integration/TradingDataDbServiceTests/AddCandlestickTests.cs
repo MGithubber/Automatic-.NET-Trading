@@ -9,7 +9,7 @@ public class AddCandlestickTests : TradingDataDbServiceTestsFixture
     public void AddCandlestick_AddsCandlestick_WhenCandlestickDoesNotExist()
     {
         // Arrange
-        TVCandlestick candlestick = this.CandlesticksFaker.Generate();
+        LuxAlgoCandlestick candlestick = this.CandlesticksFaker.Generate();
 
         // Act
         int id = this.SUT.AddCandlestick(candlestick);
@@ -22,7 +22,7 @@ public class AddCandlestickTests : TradingDataDbServiceTestsFixture
     public void AddCandlestick_DoesNotAddCandlestick_WhenCandlestickAlreadyExists()
     {
         // Arrange
-        TVCandlestick candlestick = this.CandlesticksFaker.Generate();
+        LuxAlgoCandlestick candlestick = this.CandlesticksFaker.Generate();
         this.SUT.AddCandlestick(candlestick);
         
         // Act & Assert
