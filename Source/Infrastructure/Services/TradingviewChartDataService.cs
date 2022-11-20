@@ -208,28 +208,6 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
         } 
         #endregion
 
-        #region MOCKING
-        //DateTime dateTime = DateTime.Parse(data_window_lines[1], CultureInfo.InvariantCulture);
-        //return new TVCandlestick
-        //{
-        //    CurrencyPair = new CurrencyPair("ETH", "BUSD"),
-
-        //    Date = dateTime,
-
-        //    Open = decimal.Parse(data_window_lines[2], CultureInfo.InvariantCulture),
-        //    High = decimal.Parse(data_window_lines[3], CultureInfo.InvariantCulture),
-        //    Low = decimal.Parse(data_window_lines[4], CultureInfo.InvariantCulture),
-        //    Close = decimal.Parse(data_window_lines[5], CultureInfo.InvariantCulture),
-
-        //    Buy = true, // dateTime.Minute % 5 == 0 && dateTime.Minute % 10 != 0
-        //    StrongBuy = false,
-        //    Sell = false, // dateTime.Minute % 10 == 0
-        //    StrongSell = false,
-        //    ExitBuy = double.NaN,
-        //    ExitSell = double.NaN
-        //};
-        #endregion
-
         return new LuxAlgoCandlestick
         {
             CurrencyPair = new CurrencyPair("ETH", "BUSD"),
