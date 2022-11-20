@@ -47,7 +47,7 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
 
         //// ////
         
-        this.OnNewCandlestickRegistered += (object? sender, TCandlestick e) => this.TradingDataDbService.AddCandlestick(e);
+        this.OnNewCandlestickRegistered += (object? sender, TCandlestick e) => this.TradingDataDbService.AddCandlestickAsync(e);
 
         this.TradingStrategies.ForEach(trader =>
         {
@@ -59,11 +59,11 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
             new List<BinanceFuturesOrder> { e.Value.EntryOrder, e.Value.StopLossOrder!, e.Value.TakeProfitOrder! }
             .Where(order => order is not null)
             .ToList()
-            .ForEach(order => this.TradingDataDbService.AddFuturesOrder(order, e.Key, out int _, out int _));
+            .ForEach(order => this.TradingDataDbService.AddFuturesOrderAsync(order, e.Key).GetAwaiter().GetResult());
         }
         void Trader_OnPositionClosed(object? sender, KeyValuePair<TCandlestick, BinanceFuturesOrder> e)
         {
-            this.TradingDataDbService.AddFuturesOrder(e.Value, e.Key, out int _, out int _);
+            this.TradingDataDbService.AddFuturesOrderAsync(e.Value, e.Key).GetAwaiter().GetResult();
         }
     }
 

@@ -9,5 +9,5 @@ namespace AutomaticDotNETtrading.Application.Interfaces.Data;
 
 public interface IDatabaseConnectionFactory<T> where T : IDbConnection
 {
-    public T CreateConnection();
+    public Task<T> CreateConnectionAsync();
 }

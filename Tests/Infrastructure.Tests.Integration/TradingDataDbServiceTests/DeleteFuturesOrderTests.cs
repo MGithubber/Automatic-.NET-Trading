@@ -12,30 +12,30 @@ namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 public class DeleteFuturesOrderTests : TradingDataDbServiceTestsFixture
 {
     [Test, Order(1)]
-    public void DeleteFuturesOrder_DeletesFuturesOrder_IfFuturesOrderExists()
+    public async Task DeleteFuturesOrder_DeletesFuturesOrder_IfFuturesOrderExists()
     {
         // Arrange
         LuxAlgoCandlestick candlestick = this.CandlesticksFaker.Generate();
         BinanceFuturesOrder order = this.FuturesOrdersFaker.Generate();
         order.CreateTime = candlestick.Date;
         order.Symbol = candlestick.CurrencyPair.Name;
-        this.SUT.AddFuturesOrder(order, candlestick, out int order_id, out _);
-
+        (int order_id, _) = await this.SUT.AddFuturesOrderAsync(order, candlestick);
+        
         // Act
-        int deleted_order_id = this.SUT.DeleteFuturesOrder(order);
+        int deleted_order_id = await this.SUT.DeleteFuturesOrderAsync(order);
 
         // Assert
         order_id.Should().Be(deleted_order_id);
     }
     
     [Test, Order(2)]
-    public void DeleteFuturesOrder_ThrowsArgumentException_IfFuturesOrderDoesNotExist()
+    public async Task DeleteFuturesOrder_ThrowsArgumentException_IfFuturesOrderDoesNotExist()
     {
         // Arrange
         BinanceFuturesOrder order = this.FuturesOrdersFaker.Generate();
-        
+         
         // Act & Assert
-        Action action = () => this.SUT.DeleteFuturesOrder(order);
-        action.Should().Throw<ArgumentException>();
+        Func<Task<int>> action = async () => await this.SUT.DeleteFuturesOrderAsync(order);
+        await action.Should().ThrowAsync<ArgumentException>();
     }
 }

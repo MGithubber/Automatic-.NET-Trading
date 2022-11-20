@@ -19,14 +19,14 @@ public interface ITradingDataDbService<TCandlestick> where TCandlestick : IQuote
     /// </summary>
     /// <param name="Candlestick">The candlestick to be added</param>
     /// <returns></returns>
-    public int AddCandlestick(TCandlestick Candlestick);
+    public Task<int> AddCandlestickAsync(TCandlestick Candlestick);
 
     /// <summary>
     /// Deletes a <see cref="TCandlestick"/> synchronously from the database then returns its database identity
     /// </summary>
     /// <param name="Candlestick">The candlestick to be deleted</param>
     /// <returns></returns>
-    public int DeleteCandlestick(TCandlestick Candlestick);
+    public Task<int> DeleteCandlestickAsync(TCandlestick Candlestick);
 
 
     /// <summary>
@@ -36,12 +36,12 @@ public interface ITradingDataDbService<TCandlestick> where TCandlestick : IQuote
     /// <param name="Candlestick">The candlestick to be either added or located</param>
     /// <param name="FuturesOrder_Id">The order database identity after it has been added</param>
     /// <param name="Candlestick_Id">The candlestick database identity after it has been added or located</param>
-    public void AddFuturesOrder(BinanceFuturesOrder FuturesOrder, TCandlestick Candlestick, out int FuturesOrder_Id, out int Candlestick_Id);
+    public Task<(int FuturesOrder_Id, int Candlestick_Id)> AddFuturesOrderAsync(BinanceFuturesOrder FuturesOrder, TCandlestick Candlestick);
 
     /// <summary>
     /// Deletes a <see cref="BinanceFuturesOrder"/> synchronously from the database then returns its database identity
     /// </summary>
     /// <param name="FuturesOrder">The order to be deleted</param>
     /// <returns></returns>
-    public int DeleteFuturesOrder(BinanceFuturesOrder FuturesOrder);
+    public Task<int> DeleteFuturesOrderAsync(BinanceFuturesOrder FuturesOrder);
 }

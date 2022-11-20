@@ -16,12 +16,12 @@ public class SqlDatabaseConnectionFactory : IDatabaseConnectionFactory<SqlConnec
     public SqlDatabaseConnectionFactory(string ConnectionString) => this.ConnectionString = ConnectionString;
 
     
-    public SqlConnection CreateConnection()
+    public async Task<SqlConnection> CreateConnectionAsync()
     {
         try
         {
             SqlConnection SqlConnection = new SqlConnection(this.ConnectionString);
-            SqlConnection.Open();
+            await SqlConnection.OpenAsync();
             return SqlConnection;
         }
         catch (Exception exception) { throw new Exception("Connection to database failed", exception); }

@@ -13,7 +13,7 @@ namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 public class AddFuturesOrderTests : TradingDataDbServiceTestsFixture
 {
     [Test, Order(1)]
-    public void AddFuturesOrder_AddsFuturesOrder_IfFuturesOrderDoesNotExistAndIsValid()
+    public async Task AddFuturesOrder_AddsFuturesOrder_IfFuturesOrderDoesNotExistAndIsValid()
     {
         // Arrange
         LuxAlgoCandlestick candlestick = this.CandlesticksFaker.Generate();
@@ -22,15 +22,15 @@ public class AddFuturesOrderTests : TradingDataDbServiceTestsFixture
         order.Symbol = candlestick.CurrencyPair.Name;
 
         // Act
-        this.SUT.AddFuturesOrder(order, candlestick, out int order_id, out int canlestick_id);
-
+        (int order_id, int canlestick_id) = await this.SUT.AddFuturesOrderAsync(order, candlestick);
+        
         // Assert
         order_id.Should().BeGreaterThan(0);
         canlestick_id.Should().BeGreaterThan(0);
     }
 
     [Test, Order(2)]
-    public void AddFuturesOrder_DoesNotAddFuturesOrder_AlreadyExists()
+    public async Task AddFuturesOrder_DoesNotAddFuturesOrder_AlreadyExists()
     {
         // Arrange
         LuxAlgoCandlestick candlestick = this.CandlesticksFaker.Generate();
@@ -39,10 +39,10 @@ public class AddFuturesOrderTests : TradingDataDbServiceTestsFixture
         order.Symbol = candlestick.CurrencyPair.Name;
 
         // Act
-        this.SUT.AddFuturesOrder(order, candlestick, out int order_id, out int canlestick_id);
-
+        var (FuturesOrder_Id, Candlestick_Id) = await this.SUT.AddFuturesOrderAsync(order, candlestick);
+        
         // Assert
-        Action action = () => this.SUT.AddFuturesOrder(order, candlestick, out _, out _);
-        action.Should().Throw<SqlException>();
+        Func<Task> action = async () => await this.SUT.AddFuturesOrderAsync(order, candlestick);
+        await action.Should().ThrowAsync<SqlException>();
     }
 }

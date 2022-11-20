@@ -27,11 +27,11 @@ public class TradingDataDbService : ITradingDataDbService<LuxAlgoCandlestick>
 
     //// //// ////
 
-    public int AddCandlestick(LuxAlgoCandlestick Candlestick)
+    public async Task<int> AddCandlestickAsync(LuxAlgoCandlestick Candlestick)
     {
         try
         {
-            this.Connection = this.ConnectionFactory.CreateConnection();
+            this.Connection = await this.ConnectionFactory.CreateConnectionAsync();
             using SqlCommand command = new SqlCommand
             {
                 CommandText = "spAddCandlestick",
@@ -70,11 +70,11 @@ public class TradingDataDbService : ITradingDataDbService<LuxAlgoCandlestick>
         catch { throw; }
         finally { this.Connection?.Close(); }
     }
-    public int DeleteCandlestick(LuxAlgoCandlestick Candlestick)
+    public async Task<int> DeleteCandlestickAsync(LuxAlgoCandlestick Candlestick)
     {
         try
         {
-            this.Connection = this.ConnectionFactory.CreateConnection();
+            this.Connection = await this.ConnectionFactory.CreateConnectionAsync();
             using SqlCommand command = new SqlCommand
             {
                 CommandText = "spDeleteCandlestick",
@@ -108,8 +108,8 @@ public class TradingDataDbService : ITradingDataDbService<LuxAlgoCandlestick>
         catch { throw; }
         finally { this.Connection?.Close(); }
     }
-
-    public void AddFuturesOrder(BinanceFuturesOrder FuturesOrder, LuxAlgoCandlestick Candlestick, out int FuturesOrder_Id, out int Candlestick_Id)
+    
+    public async Task<(int FuturesOrder_Id, int Candlestick_Id)> AddFuturesOrderAsync(BinanceFuturesOrder FuturesOrder, LuxAlgoCandlestick Candlestick)
     {
         try
         {
@@ -119,7 +119,7 @@ public class TradingDataDbService : ITradingDataDbService<LuxAlgoCandlestick>
             }
 
 
-            this.Connection = this.ConnectionFactory.CreateConnection();
+            this.Connection = await this.ConnectionFactory.CreateConnectionAsync();
             using SqlCommand command = new SqlCommand
             {
                 CommandText = "spAddFuturesOrder",
@@ -163,25 +163,24 @@ public class TradingDataDbService : ITradingDataDbService<LuxAlgoCandlestick>
             this.Connection.Close();
 
 
-            int FuturesOrder_Id_temp = (int)command.Parameters["@FuturesOrder_Identity"].Value;
-            int Candlestick_Id_temp = (int)command.Parameters["@Candlestick_Identity"].Value;
-
-            if (FuturesOrder_Id_temp < 1 || Candlestick_Id_temp < 1)
+            int FuturesOrder_Id = (int)command.Parameters["@FuturesOrder_Identity"].Value;
+            int Candlestick_Id = (int)command.Parameters["@Candlestick_Identity"].Value;
+            
+            if (FuturesOrder_Id < 1 || Candlestick_Id < 1)
             {
                 throw new ArgumentException("The specified futures order and/or candlestick could not be added to the database");
             }
 
-            FuturesOrder_Id = FuturesOrder_Id_temp;
-            Candlestick_Id = Candlestick_Id_temp;
+            return (FuturesOrder_Id, Candlestick_Id);   
         }
         catch { throw; }
         finally { this.Connection?.Close(); }
     }
-    public int DeleteFuturesOrder(BinanceFuturesOrder FuturesOrder)
+    public async Task<int> DeleteFuturesOrderAsync(BinanceFuturesOrder FuturesOrder)
     {
         try
         {
-            this.Connection = this.ConnectionFactory.CreateConnection();
+            this.Connection = await this.ConnectionFactory.CreateConnectionAsync();
             using SqlCommand command = new SqlCommand
             {
                 CommandText = "spDeleteFuturesOrder",

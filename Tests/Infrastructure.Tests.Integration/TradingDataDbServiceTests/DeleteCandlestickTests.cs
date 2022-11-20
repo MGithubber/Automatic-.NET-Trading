@@ -11,27 +11,27 @@ namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 public class DeleteCandlestickTests : TradingDataDbServiceTestsFixture
 {
     [Test, Order(1)]
-    public void DeleteCandlestick_DeletesCandlestick_WhenCandlestickExists()
+    public async Task DeleteCandlestick_DeletesCandlestick_WhenCandlestickExists()
     {
         // Arrange
         LuxAlgoCandlestick canlestick = this.CandlesticksFaker.Generate();
-        int idAdded = this.SUT.AddCandlestick(canlestick);
+        int idAdded = await this.SUT.AddCandlestickAsync(canlestick);
         
         // Act
-        int idDeleted = this.SUT.DeleteCandlestick(canlestick);
+        int idDeleted = await this.SUT.DeleteCandlestickAsync(canlestick);
 
         // Assert
         idDeleted.Should().Be(idAdded);
     }
 
     [Test, Order(2)]
-    public void DeleteCandlestick_ThrowsArgumentException_WhenCandlestickDoesNotExist()
+    public async Task DeleteCandlestick_ThrowsArgumentException_WhenCandlestickDoesNotExist()
     {
         // Arrange
         LuxAlgoCandlestick canlestick = this.CandlesticksFaker.Generate();
-
+        
         // Assert
-        Action action = () => this.SUT.DeleteCandlestick(canlestick);
-        action.Should().Throw<ArgumentException>();
+        Func<Task<int>> action = async () => await this.SUT.DeleteCandlestickAsync(canlestick);
+        await action.Should().ThrowAsync<ArgumentException>();
     }
 }
