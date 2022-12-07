@@ -368,43 +368,14 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
 
     //// //// ////
     
-    public void Close()
-    {
-        try { this.ChromeDriver.Close(); }
-        catch { }
-    }
-    public void Quit()
-    {
-        try { this.ChromeDriver.Quit(); }
-        catch { }
-    }
-
-
-    //// //// ////
-
-
-    private bool Disposed = false;
     public void Dispose()
     {
-        try { this.Quit(); }
-        finally
+        try
         {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-    }
-    protected virtual void Dispose(bool disposing)
-    {
-        if (this.Disposed)
-            return;
-
-        if (disposing)
-        {
+            this.ChromeDriver.Dispose();
             this.Semaphore.Dispose();
+            this.RegisteredTVCandlesticks.Clear();
         }
-        
-        this.RegisteredTVCandlesticks.Clear();
-
-        this.Disposed = true;
+        finally { GC.SuppressFinalize(this); }
     }
 }

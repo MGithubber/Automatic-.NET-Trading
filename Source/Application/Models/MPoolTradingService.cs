@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using AutomaticDotNETtrading.Application.Interfaces;
 using AutomaticDotNETtrading.Application.Interfaces.Data;
 using AutomaticDotNETtrading.Application.Interfaces.Services;
-using AutomaticDotNETtrading.Application.Interfaces.Services.Internal;
 using AutomaticDotNETtrading.Domain.Models;
 
 using Binance.Net.Enums;
@@ -30,14 +29,14 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
     private readonly List<ITradingStrategy<TCandlestick>>? TradingStrategies = null;
     public int NrTradingStrategies => this.TradingStrategies!.Count;
     
-    public MPoolTradingService(IChartDataService<TCandlestick> chartDataService, ITradingDataDbService<TCandlestick> tradingDataDbService, params ITradingStrategy<TCandlestick>[] traders)
+    public MPoolTradingService(IChartDataService<TCandlestick> chartDataService, ITradingDataDbService<TCandlestick> tradingDataDbService, IEnumerable<ITradingStrategy<TCandlestick>> traders)
     {
         this.ChartDataService = chartDataService ?? throw new ArgumentNullException(nameof(chartDataService));
         this.TradingDataDbService = tradingDataDbService ?? throw new ArgumentNullException(nameof(tradingDataDbService));
         this.TradingStrategies = traders is not null ? traders.ToList() : throw new ArgumentNullException(nameof(traders));
 
         #region Input error checks
-        if (traders.Length == 0)
+        if (traders.Count() == 0)
             throw new ArgumentException(nameof(this.TradingStrategies));
         
         IEnumerable<ICfdTradingApiService> contractTraders = this.TradingStrategies.Select(strategy => strategy.ContractTrader);
@@ -103,8 +102,12 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
             // previously in catch: Console.WriteLine($"==============================\n\nEXCEPTION AT Parallel.Invoke(traders)\n\n{exception}\n\n==============================");
         }
     }
-    
+
     //// ////
 
-    public void QuitChartDataService() => this.ChartDataService.Quit();
+    public void Dispose()
+    {
+        try { this.ChartDataService.Dispose(); }
+        finally { GC.SuppressFinalize(this); }
+    }
 }

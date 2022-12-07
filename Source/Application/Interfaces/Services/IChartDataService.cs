@@ -40,5 +40,5 @@ public interface IChartDataService<T> : IDisposable where T : IQuote
     /// <returns></returns>
     public Task RegisterAllCandlesticksAsync();
 
-    public void Quit();
+    // public void Quit();
 }

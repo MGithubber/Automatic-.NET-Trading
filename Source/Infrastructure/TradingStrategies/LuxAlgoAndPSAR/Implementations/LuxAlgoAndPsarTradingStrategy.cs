@@ -120,13 +120,7 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
     
     public void Dispose()
     {
-        try
-        {
-            this.ContractTrader.Dispose();
-        }
-        finally
-        {
-            GC.SuppressFinalize(this);
-        }
+        try { this.ContractTrader.Dispose(); }
+        finally { GC.SuppressFinalize(this); }
     }
 }

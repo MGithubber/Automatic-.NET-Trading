@@ -278,9 +278,6 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
             this.FuturesClient?.Dispose();
             this.BinanceClient.Dispose();
         }
-        finally
-        {
-            GC.SuppressFinalize(this);
-        }
+        finally { GC.SuppressFinalize(this); }
     }
 }
