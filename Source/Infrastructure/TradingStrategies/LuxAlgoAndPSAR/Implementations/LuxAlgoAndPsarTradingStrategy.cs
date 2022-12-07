@@ -58,27 +58,28 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
     protected internal LuxAlgoSignal LastTradedSignal;
     protected internal decimal StopLoss;
     protected internal decimal ExitSignalPrice;
-    
+
+
+    #region Market related methods
     protected void GetTrendDirection()
     {
         LuxAlgoSignal signal = this.LastCandle.LuxAlgoSignal;
-
+        
         if (signal == LuxAlgoSignal.Buy || signal == LuxAlgoSignal.StrongBuy)
             this.TrendDirection = TrendDirection.Uptrend;
+
         else if (signal == LuxAlgoSignal.Sell || signal == LuxAlgoSignal.StrongSell)
             this.TrendDirection = TrendDirection.Downtrend;
     }
-
-    protected decimal[] GetParabolicSAR() => this.Candlesticks.GetParabolicSar().Select(res => res.Sar.HasValue ? Convert.ToDecimal(res.Sar.Value) : decimal.Zero).ToArray();
-
+    protected decimal[] GetParabolicSAR() => this.Candlesticks.GetParabolicSar().Select(res => res.Sar.HasValue ? Convert.ToDecimal(res.Sar.Value) : decimal.Zero).ToArray(); 
+    #endregion
 
     #region IFuturesPairTradingApiService calls
     protected async Task OpenFuturesPosition(OrderSide OrderSide, decimal? StopLoss_price = null, decimal? TakeProfit_price = null)
     {
-        CallResult<IEnumerable<CallResult<BinanceFuturesPlacedOrder>>> CallResult = await this.ContractTrader.OpenPositionAtMarketPriceAsync(OrderSide, decimal.MaxValue, StopLoss_price, TakeProfit_price);
-
-        if (this.ContractTrader.Position is null)
-            throw new Exception($"Failed to open a futures order position on {nameof(OrderSide)} {OrderSide}", new NullReferenceException(nameof(this.ContractTrader.Position)));
+        await this.ContractTrader.OpenPositionAtMarketPriceAsync(OrderSide, decimal.MaxValue, StopLoss_price, TakeProfit_price);
+        
+        _ = this.ContractTrader.Position ?? throw new Exception($"Failed to open a futures order position on {nameof(OrderSide)} {OrderSide}", new NullReferenceException(nameof(this.ContractTrader.Position)));
 
         this.OnPositionOpened_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, FuturesPosition>(this.LastCandle, this.ContractTrader.Position));
     }
@@ -93,11 +94,10 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
     }
     protected async Task PlaceNewStopLoss(decimal price)
     {
-        CallResult<BinanceFuturesPlacedOrder> CallResult = await this.ContractTrader.PlaceStopLossAsync(price);
-
+        await this.ContractTrader.PlaceStopLossAsync(price);
+        
         _ = this.ContractTrader.Position ?? throw new NullReferenceException($"{nameof(this.ContractTrader.Position)} was NULL");
-        if (this.ContractTrader.Position.StopLossOrder is null)
-            throw new Exception($"Failed to place a futures stop loss order", new NullReferenceException(nameof(this.ContractTrader.Position)));
+        _ = this.ContractTrader.Position.StopLossOrder ?? throw new Exception($"Failed to place a futures stop loss order", new NullReferenceException(nameof(this.ContractTrader.Position)));
 
         this.OnPositionClosed_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>(this.LastCandle, this.ContractTrader.Position.StopLossOrder));
     }
