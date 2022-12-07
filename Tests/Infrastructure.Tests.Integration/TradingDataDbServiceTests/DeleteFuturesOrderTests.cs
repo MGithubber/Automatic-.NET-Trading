@@ -9,7 +9,7 @@ using Binance.Net.Objects.Models.Futures;
 
 namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 
-public class DeleteFuturesOrderTests : TradingDataDbServiceTestsFixture
+public class DeleteFuturesOrderTests : TradingDataDbServiceTestsBase
 {
     [Test, Order(1)]
     public async Task DeleteFuturesOrder_DeletesFuturesOrder_IfFuturesOrderExists()

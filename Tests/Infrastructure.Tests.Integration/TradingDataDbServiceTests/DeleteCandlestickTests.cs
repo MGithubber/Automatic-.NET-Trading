@@ -8,7 +8,7 @@ using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Mod
 
 namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 
-public class DeleteCandlestickTests : TradingDataDbServiceTestsFixture
+public class DeleteCandlestickTests : TradingDataDbServiceTestsBase
 {
     [Test, Order(1)]
     public async Task DeleteCandlestick_DeletesCandlestick_WhenCandlestickExists()

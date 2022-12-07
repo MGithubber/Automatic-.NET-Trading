@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Infrastructure.Tests.Integration.BinanceCfdTradingApiServiceTests;
 
 [TestFixture]
-public abstract class BinanceTradingServiceTestsFixture
+public abstract class BinanceTradingServiceTestsBase
 {
     protected readonly ApiCredentials BinanceApiCredentials = Credentials.BinanceApiTestAccountApiCreds;
     protected readonly CurrencyPair CurrencyPair = new CurrencyPair("ETH", "BUSD");

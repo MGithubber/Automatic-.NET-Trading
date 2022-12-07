@@ -19,7 +19,7 @@ using NSubstitute.ReturnsExtensions;
 
 namespace Infrastructure.Tests.Unit.LuxAlgoAndPsarTradingStrategyTests.Long;
 
-public class PositionManagementTests : LuxAlgoAndPsarTradingStrategyTestsFixture
+public class PositionManagementTests : LuxAlgoAndPsarTradingStrategyTestsBase
 {
     [SetUp]
     public void OneTimeSetUp() => this.SUT = new LuxAlgoAndPsarTradingStrategyLong(new TradingParameters(), this.BinaceApi);

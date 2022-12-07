@@ -3,7 +3,7 @@ using System.Data.SqlClient;
 
 namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 
-public class AddCandlestickTests : TradingDataDbServiceTestsFixture
+public class AddCandlestickTests : TradingDataDbServiceTestsBase
 {
     [Test, Order(1)]
     public async Task AddCandlestick_AddsCandlestick_WhenCandlestickDoesNotExist()

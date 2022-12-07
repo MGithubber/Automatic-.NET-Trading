@@ -18,7 +18,7 @@ using Respawn;
 namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 
 [TestFixture]
-public abstract class TradingDataDbServiceTestsFixture
+public abstract class TradingDataDbServiceTestsBase
 {
     protected const string ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=\"Binance trading logs\";Integrated Security=True";
     protected readonly IDatabaseConnectionFactory<SqlConnection> ConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString);

@@ -10,7 +10,7 @@ using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Mod
 
 namespace Infrastructure.Tests.Integration.TradingDataDbServiceTests;
 
-public class AddFuturesOrderTests : TradingDataDbServiceTestsFixture
+public class AddFuturesOrderTests : TradingDataDbServiceTestsBase
 {
     [Test, Order(1)]
     public async Task AddFuturesOrder_AddsFuturesOrder_IfFuturesOrderDoesNotExistAndIsValid()

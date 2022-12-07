@@ -11,7 +11,7 @@ using Bogus;
 
 namespace Infrastructure.Tests.Unit.LuxAlgoAndPsarTradingStrategyTests;
 
-public abstract class LuxAlgoAndPsarTradingStrategyTestsFixture
+public abstract class LuxAlgoAndPsarTradingStrategyTestsBase
 {
     protected readonly ICfdTradingApiService BinaceApi = Substitute.For<ICfdTradingApiService>();
     protected LuxAlgoAndPsarTradingStrategy SUT = default!;

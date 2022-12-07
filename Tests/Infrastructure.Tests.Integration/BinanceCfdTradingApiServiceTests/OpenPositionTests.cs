@@ -10,7 +10,7 @@ using CryptoExchange.Net.Objects;
 
 namespace Infrastructure.Tests.Integration.BinanceCfdTradingApiServiceTests;
 
-public class OpenPositionTests : BinanceTradingServiceTestsFixture
+public class OpenPositionTests : BinanceTradingServiceTestsBase
 {
     private bool StopTests = false; // the test execution stops if this field becomes true
     private const decimal precision = 1;
