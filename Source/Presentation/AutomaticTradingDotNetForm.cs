@@ -1,3 +1,8 @@
+using System;
+using System.Data.SqlClient;
+using System.Text;
+using System.Xml.Serialization;
+
 using AutomaticDotNETtrading.Application.Models;
 using AutomaticDotNETtrading.Domain.Models;
 using AutomaticDotNETtrading.Infrastructure.Data;
@@ -11,11 +16,6 @@ using Binance.Net.Objects.Models.Futures;
 using CryptoExchange.Net.Objects;
 
 using OpenQA.Selenium;
-
-using System;
-using System.Data.SqlClient;
-using System.Text;
-using System.Xml.Serialization;
 
 namespace Presentation;
 
