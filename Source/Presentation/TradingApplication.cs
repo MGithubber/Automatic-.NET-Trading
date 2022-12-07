@@ -19,6 +19,7 @@ using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Imp
 using OpenQA.Selenium;
 using AutomaticDotNETtrading.Domain.Models;
 using System.Xml.Serialization;
+using Binance.Net.Objects.Models.Futures;
 
 namespace Presentation;
 
@@ -38,7 +39,7 @@ internal class TradingApplication
     public static ServiceCollection GetDefaultServices()
     {
         var services = new ServiceCollection();
-
+        
         services.AddSingleton<IDatabaseConnectionFactory<SqlConnection>, SqlDatabaseConnectionFactory>(x => new(ProgramIO.ConnectionString));
         services.AddSingleton<ITradingDataDbService<LuxAlgoCandlestick>, TradingDataDbService>();
 
@@ -60,16 +61,23 @@ internal class TradingApplication
 
         services.AddSingleton<ITradingStrategy<LuxAlgoCandlestick>, LuxAlgoAndPsarTradingStrategyLong>(provider =>
         {
-            TradingParameters TradingParams_LONG = ReadXMLfile(ProgramIO.TradingParametersXmlFile_Long);
-            BinanceCfdTradingApiService BinanceContractTrader_Long = new(new CurrencyPair("ETH", "BUSD"), ProgramIO.BinanceApiCredentials);
+            TradingParameters tradingParameters = ReadXMLfile(ProgramIO.TradingParametersXmlFile_Long);
+            BinanceCfdTradingApiService BinanceContractTrader = new(new CurrencyPair("ETH", "BUSD"), ProgramIO.BinanceApiCredentials);
+            
+            var LuxAlgoPsarStrategy = new LuxAlgoAndPsarTradingStrategyLong(tradingParameters, BinanceContractTrader);
+            // // to add events // //
 
-            return new(TradingParams_LONG, BinanceContractTrader_Long);
+            return LuxAlgoPsarStrategy;
         });
         services.AddSingleton<ITradingStrategy<LuxAlgoCandlestick>, LuxAlgoAndPsarTradingStrategyShort>(provider =>
         {
-            TradingParameters TradingParams_SHORT = ReadXMLfile(ProgramIO.TradingParametersXMLFile_Short);
-            BinanceCfdTradingApiService BinanceContractTrader_Short = new(new CurrencyPair("ETH", "USDT"), ProgramIO.BinanceApiCredentials);
-            return new(TradingParams_SHORT, BinanceContractTrader_Short);
+            TradingParameters tradingParameters = ReadXMLfile(ProgramIO.TradingParametersXMLFile_Short);
+            BinanceCfdTradingApiService BinanceContractTrader = new(new CurrencyPair("ETH", "USDT"), ProgramIO.BinanceApiCredentials);
+
+            var LuxAlgoPsarStrategy = new LuxAlgoAndPsarTradingStrategyShort(tradingParameters, BinanceContractTrader);
+            // // to add events // //
+
+            return LuxAlgoPsarStrategy;
         });
 
         services.AddSingleton<IPoolTradingService, MPoolTradingService<LuxAlgoCandlestick, SqlConnection>>();
