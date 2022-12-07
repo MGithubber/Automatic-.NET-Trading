@@ -14,16 +14,17 @@ using AutomaticDotNETtrading.Domain.Models;
 using AutomaticDotNETtrading.Infrastructure.Data;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enums;
+using AutomaticDotNETtrading.Application.Interfaces.Data;
 
 namespace AutomaticDotNETtrading.Infrastructure.Services;
 
 public class TradingDataDbService : ITradingDataDbService<LuxAlgoCandlestick>
 {
-    private readonly SqlDatabaseConnectionFactory ConnectionFactory;
+    private readonly IDatabaseConnectionFactory<SqlConnection> ConnectionFactory;
     private SqlConnection? Connection;
 
     public TradingDataDbService(string ConnectionString) => this.ConnectionFactory = new SqlDatabaseConnectionFactory(ConnectionString);
-    public TradingDataDbService(SqlDatabaseConnectionFactory connectionFactory) => this.ConnectionFactory = connectionFactory;
+    public TradingDataDbService(IDatabaseConnectionFactory<SqlConnection> connectionFactory) => this.ConnectionFactory = connectionFactory;
 
     //// //// ////
 
