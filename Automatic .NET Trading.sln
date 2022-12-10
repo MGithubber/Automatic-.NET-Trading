@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Source\Appli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Source\Infrastructure\Infrastructure.csproj", "{3B6B9A92-A667-49C6-8794-70205E8817E8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Presentation", "Source\Presentation\Presentation.csproj", "{DB1C570B-0243-403F-A788-765B97918A26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Presentation.WinForm", "Source\Presentation\Presentation.WinForm.csproj", "{DB1C570B-0243-403F-A788-765B97918A26}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain.Tests", "Tests\Domain.Integration.Testing\Domain.Tests.csproj", "{FFF11D28-0260-4CE5-9CCE-8917B0F795FD}"
 EndProject
@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure.Tests.Integr
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Trading Data Logs", "Source\Trading Data Logs\Trading Data Logs.sqlproj", "{3021AF94-F39D-4364-B03B-3A17975F2803}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.Tests.Unit", "Tests\Infrastructure.Tests.Unit\Infrastructure.Tests.Unit.csproj", "{3C73F7B0-F067-4406-9703-15D90BBA4794}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure.Tests.Unit", "Tests\Infrastructure.Tests.Unit\Infrastructure.Tests.Unit.csproj", "{3C73F7B0-F067-4406-9703-15D90BBA4794}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

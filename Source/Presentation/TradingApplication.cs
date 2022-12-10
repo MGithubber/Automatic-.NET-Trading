@@ -21,7 +21,7 @@ using AutomaticDotNETtrading.Domain.Models;
 using System.Xml.Serialization;
 using Binance.Net.Objects.Models.Futures;
 
-namespace Presentation;
+namespace Presentation.WinForm;
 
 internal class TradingApplication
 {

@@ -10,7 +10,7 @@ using Binance.Net.Objects.Models.Futures;
 using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.CommonObjects;
 
-namespace Presentation;
+namespace Presentation.WinForm;
 
 internal static class ProgramIO
 {

@@ -24,7 +24,7 @@ using OpenQA.Selenium;
 
 using Skender.Stock.Indicators;
 
-namespace Presentation;
+namespace Presentation.WinForm;
 
 public partial class AutomaticTradingDotNetForm : Form
 {

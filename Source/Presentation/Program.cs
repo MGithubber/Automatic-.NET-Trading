@@ -1,6 +1,6 @@
 using Binance.Net.Objects.Models.Futures;
 
-namespace Presentation;
+namespace Presentation.WinForm;
 
 internal static class Program
 {
