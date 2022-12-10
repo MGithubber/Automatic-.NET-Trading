@@ -1,4 +1,7 @@
+using AutomaticDotNETtrading.Application.Interfaces.Services;
+
 using Presentation.Api;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,5 +25,5 @@ app.UseHttpsRedirection();
 
 app.MapEndpoints();
 
+// run the trading application
 app.Run();
-

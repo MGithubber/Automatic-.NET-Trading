@@ -75,6 +75,42 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
     #endregion
     
     internal TradingviewChartDataService() { }
+    public TradingviewChartDataService(string chromeDriverDirectory, string userDataDirectory, string downloadsDirectory)
+    {
+        this.downloadsDirectory = downloadsDirectory;
+
+        this.ChromeOptions = new ChromeOptions();
+        this.ChromeOptions.AddArgument($@"user-data-dir={userDataDirectory}");
+        this.ChromeOptions.AddArgument("--log-level=3");
+        this.ChromeOptions.AddUserProfilePreference("download.default_directory", downloadsDirectory);
+        this.ChromeOptions.AddUserProfilePreference("download.prompt_for_download", false);
+        this.ChromeOptions.AddUserProfilePreference("disable-popup-blocking", true);
+        this.ChromeOptions.AddUserProfilePreference("block_third_party_cookies", true);
+
+        this.ChromeDriver = new ChromeDriver(chromeDriverDirectory, this.ChromeOptions);
+        this.ChromeDriver.Url = "https://www.tradingview.com/chart/oxqzhJn4/?symbol=BINANCE%3AETHBUSD";
+
+        #region Locators
+        this.Chart_Locator = By.ClassName("chart-gui-wrapper");
+        this.DataWindow_Locator = By.ClassName("chart-data-window");
+
+        this.ZoomInButton_Locator = By.ClassName("control-bar__btn--zoom-in");
+        this.ZoomOutButton_Locator = By.ClassName("control-bar__btn--zoom-out");
+        this.ScrollLeftButton_Locator = By.ClassName("control-bar__btn--move-left");
+        this.ScrollRightButton_Locator = By.ClassName("control-bar__btn--move-right");
+        this.ResetChartButton_Locator = By.ClassName("control-bar__btn--turn-button");
+
+        this.ManageLayoutsButton_Locator = By.ClassName("js-save-load-menu-open-button");
+        this.ExportChartDataButton_Locator = By.XPath("""/html[@class='is-authenticated is-pro is-not-trial theme-dark is-upgrade-available feature-no-touch feature-no-mobiletouch is-not-trial-available']/body[@class='chart-page unselectable i-no-scroll']/div[@id='overlap-manager-root']/div/span/div[@class='menuWrap-biWYdsXC']/div[@class='scrollWrap-biWYdsXC momentumBased-biWYdsXC']/div[@class='menuBox-biWYdsXC']/div[@class='item-RhC5uhZw withIcon-RhC5uhZw withIcon-PSZfKmCG'][3]""");
+        this.ExportChartDataConfirmButton_Locator = By.XPath("""/html[@class='is-authenticated is-pro is-not-trial theme-dark is-upgrade-available feature-no-touch feature-no-mobiletouch is-not-trial-available']/body[@class='chart-page unselectable i-no-scroll']/div[@id='overlap-manager-root']/div/div/div[@class='dialog-UExGRfA_ dialog-o2xKpnz8 dialog-nnDbXk_L rounded-nnDbXk_L shadowed-nnDbXk_L']/div[@class='wrapper-o2xKpnz8']/div[@class='footer-PQhX1JKt']/div[@class='buttons-PQhX1JKt']/span[@class='submitButton-PQhX1JKt']/button[@class='button-OvB35Th_ size-small-OvB35Th_ color-brand-OvB35Th_ variant-primary-OvB35Th_']""");
+        #endregion
+
+        this.WebWait = new WebDriverWait(this.ChromeDriver, new TimeSpan(0, 0, 0, 0, 1500));
+
+        // // //
+
+        this.Chart = (WebElement)this.WebWait.Until(driver => driver.FindElement(this.Chart_Locator));
+    }
     public TradingviewChartDataService(string chromeDriverDirectory, string userDataDirectory, string downloadsDirectory, By Chart_Locator, By DataWindow_Locator, By ZoomInButton_Locator, By ZoomOutButton_Locator, By ScrollLeftButton_Locator, By ScrollRightButton_Locator, By ResetChartButton_Locator, By ManageLayoutsButton_Locator, By ExportChartDataButton_Locator, By ExportChartDataConfirmButton_Locator)
     {
         this.downloadsDirectory = downloadsDirectory;

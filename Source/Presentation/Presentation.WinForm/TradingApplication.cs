@@ -27,14 +27,9 @@ internal class TradingApplication
 {
     private static TradingParameters ReadXMLfile(FileInfo xmlFile)
     {
-        TradingParameters parameters;
-        using (FileStream stream = xmlFile.OpenRead())
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(TradingParameters));
-            parameters = (TradingParameters)serializer.Deserialize(stream)!;
-        }
-
-        return parameters;
+        XmlSerializer serializer = new XmlSerializer(typeof(TradingParameters));
+        using FileStream stream = xmlFile.OpenRead();
+        return (TradingParameters)serializer.Deserialize(stream)!;
     }
     public static ServiceCollection GetDefaultServices()
     {
@@ -42,23 +37,13 @@ internal class TradingApplication
 
         services.AddSingleton<IDatabaseConnectionFactory<SqlConnection>, SqlDatabaseConnectionFactory>(_ => new SqlDatabaseConnectionFactory(ProgramIO.ConnectionString));
         services.AddSingleton<ITradingDataDbService<LuxAlgoCandlestick>, TradingDataDbService>();
-
+        
         services.AddSingleton<IChartDataService<LuxAlgoCandlestick>, TradingviewChartDataService>(_ =>
         {
             return new TradingviewChartDataService(
-                            chromeDriverDirectory: ProgramIO.ChromeDriverDirectory.FullName,
-                            userDataDirectory: ProgramIO.UserDataDirectory.FullName,
-                            downloadsDirectory: ProgramIO.ChromeDownloadsDirectory.FullName,
-                            Chart_Locator: By.ClassName("chart-gui-wrapper"),
-                            DataWindow_Locator: By.ClassName("chart-data-window"),
-                            ZoomInButton_Locator: By.ClassName("control-bar__btn--zoom-in"),
-                            ZoomOutButton_Locator: By.ClassName("control-bar__btn--zoom-out"),
-                            ScrollLeftButton_Locator: By.ClassName("control-bar__btn--move-left"),
-                            ScrollRightButton_Locator: By.ClassName("control-bar__btn--move-right"),
-                            ResetChartButton_Locator: By.ClassName("control-bar__btn--turn-button"),
-                            ManageLayoutsButton_Locator: By.ClassName("js-save-load-menu-open-button"),
-                            ExportChartDataButton_Locator: By.XPath(File.ReadAllText(Path.Combine(ProgramIO.XPathSelectorsDirectory.FullName, "ExportChartDataButton_Locator.txt"))),
-                            ExportChartDataConfirmButton_Locator: By.XPath(File.ReadAllText(Path.Combine(ProgramIO.XPathSelectorsDirectory.FullName, "ExportChartDataConfirmButton_Locator.txt"))));
+                chromeDriverDirectory: ProgramIO.ChromeDriverDirectory.FullName,
+                userDataDirectory: ProgramIO.UserDataDirectory.FullName,
+                downloadsDirectory: ProgramIO.ChromeDownloadsDirectory.FullName);
         });
 
         services.AddSingleton<ITradingStrategy<LuxAlgoCandlestick>, LuxAlgoAndPsarTradingStrategyLong>(_ =>
