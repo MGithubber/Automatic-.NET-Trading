@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /Tests/Infrastructure.Tests.Integration/BinanceCfdTradingApiServiceTests.cs
 /Tests/Infrastructure.Tests.Integration/Creditentials.cs
+/Source/Presentation/Presentation.Api/appsettings.Credentials.json
