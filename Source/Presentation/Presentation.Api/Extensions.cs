@@ -9,20 +9,22 @@ using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Imp
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 using System.Data.SqlClient;
 using System.Xml.Serialization;
+using CryptoExchange.Net.Authentication;
+using Microsoft.Extensions.Configuration;
 
 namespace Presentation.Api;
 
 public static class Extensions
 {
-    private static TradingParameters ReadXMLfile(FileInfo xmlFile)
-    {
-        XmlSerializer serializer = new XmlSerializer(typeof(TradingParameters));
-        using FileStream stream = xmlFile.OpenRead();
-        return (TradingParameters)serializer.Deserialize(stream)!;
-    }
+    //private static TradingParameters ReadXMLfile(FileInfo xmlFile)
+    //{
+    //    XmlSerializer serializer = new XmlSerializer(typeof(TradingParameters));
+    //    using FileStream stream = xmlFile.OpenRead();
+    //    return (TradingParameters)serializer.Deserialize(stream)!;
+    //}
     public static void AddServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IDatabaseConnectionFactory<SqlConnection>, SqlDatabaseConnectionFactory>(_ => new SqlDatabaseConnectionFactory(ProgramIO.ConnectionString));
+        services.AddSingleton<IDatabaseConnectionFactory<SqlConnection>, SqlDatabaseConnectionFactory>(_ => new SqlDatabaseConnectionFactory(configuration.GetConnectionString("BinanceTradingLogsDatabase")!));
         services.AddSingleton<ITradingDataDbService<LuxAlgoCandlestick>, TradingDataDbService>();
 
         services.AddSingleton<IChartDataService<LuxAlgoCandlestick>, TradingviewChartDataService>(_ =>
@@ -32,28 +34,32 @@ public static class Extensions
                 userDataDirectory: ProgramIO.UserDataDirectory.FullName,
                 downloadsDirectory: ProgramIO.ChromeDownloadsDirectory.FullName);
         });
-
+        
         services.AddSingleton<ITradingStrategy<LuxAlgoCandlestick>, LuxAlgoAndPsarTradingStrategyLong>(_ =>
         {
-            TradingParameters tradingParameters = ReadXMLfile(ProgramIO.TradingParametersXmlFile_Long);
-            BinanceCfdTradingApiService BinanceContractTrader = new(new CurrencyPair("ETH", "BUSD"), ProgramIO.BinanceApiCredentials);
+            TradingParameters tradingParameters = configuration.GetRequiredSection("LuxAlgoAndPsarTradingStrategyLong:TradingParameters").Get<TradingParameters>()!;
+            BinanceCfdTradingApiService BinanceContractTrader = new BinanceCfdTradingApiService(
+                configuration.GetRequiredSection("LuxAlgoAndPsarTradingStrategyLong:CurrencyPair").Get<CurrencyPair>()!,
+                new ApiCredentials(configuration.GetValue<string>("BinanceApiCredentials:public")!, configuration.GetValue<string>("BinanceApiCredentials:private")!));
 
             var LuxAlgoPsarStrategy = new LuxAlgoAndPsarTradingStrategyLong(tradingParameters, BinanceContractTrader);
             // // to add events // //
-
+            
             return LuxAlgoPsarStrategy;
         });
         services.AddSingleton<ITradingStrategy<LuxAlgoCandlestick>, LuxAlgoAndPsarTradingStrategyShort>(_ =>
         {
-            TradingParameters tradingParameters = ReadXMLfile(ProgramIO.TradingParametersXMLFile_Short);
-            BinanceCfdTradingApiService BinanceContractTrader = new(new CurrencyPair("ETH", "USDT"), ProgramIO.BinanceApiCredentials);
+            TradingParameters tradingParameters = configuration.GetRequiredSection("LuxAlgoAndPsarTradingStrategyShort:TradingParameters").Get<TradingParameters>()!;
+            BinanceCfdTradingApiService BinanceContractTrader = new BinanceCfdTradingApiService(
+                configuration.GetRequiredSection("LuxAlgoAndPsarTradingStrategyShort:CurrencyPair").Get<CurrencyPair>()!,
+                new ApiCredentials(configuration.GetValue<string>("BinanceApiCredentials:public")!, configuration.GetValue<string>("BinanceApiCredentials:private")!));
 
             var LuxAlgoPsarStrategy = new LuxAlgoAndPsarTradingStrategyShort(tradingParameters, BinanceContractTrader);
             // // to add events // //
 
             return LuxAlgoPsarStrategy;
         });
-
+        
         services.AddSingleton<IPoolTradingService, MPoolTradingService<LuxAlgoCandlestick, SqlConnection>>();
     }
 

@@ -22,13 +22,13 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
 {
     public ICfdTradingApiService ContractTrader { get; }
     public TradingParameters TradingParams { get; }
-
+    
     public LuxAlgoAndPsarTradingStrategy(TradingParameters TradingParams, ICfdTradingApiService ContractTrader)
     {
-        this.TradingParams = TradingParams;
-        this.ContractTrader = ContractTrader;
+        this.TradingParams = TradingParams ?? throw new ArgumentNullException(nameof(TradingParams), $"The {nameof(TradingParameters)} value was NULL when initialising an object of type {nameof(LuxAlgoAndPsarTradingStrategy)}");
+        this.ContractTrader = ContractTrader ?? throw new ArgumentNullException(nameof(ContractTrader), $"The {nameof(ICfdTradingApiService)} value was NULL when initialising an object of type {nameof(LuxAlgoAndPsarTradingStrategy)}");
     }
-
+    
     //// //// //// ////
 
     #region Events
