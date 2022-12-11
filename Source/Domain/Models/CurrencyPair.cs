@@ -15,6 +15,9 @@ public class CurrencyPair : ICloneable
 {
     public string Base { get; }
     public string Quote { get; }
+    
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string Name => $"{this.Base}{this.Quote}";
     
     public CurrencyPair(string Base, string Quote)
