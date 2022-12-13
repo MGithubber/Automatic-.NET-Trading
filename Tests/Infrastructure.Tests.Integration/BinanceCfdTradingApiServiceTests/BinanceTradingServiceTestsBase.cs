@@ -18,7 +18,7 @@ public abstract class BinanceTradingServiceTestsBase
 
     
     [OneTimeSetUp]
-    public virtual void OneTimeSetUp() => this.SUT = new BinanceCfdTradingApiService(this.CurrencyPair, this.BinanceApiCredentials);
+    public virtual void OneTimeSetUp() => this.SUT = new BinanceApiService(this.CurrencyPair, this.BinanceApiCredentials);
 
     [OneTimeTearDown]
     public virtual void OneTimeTearDown() { }

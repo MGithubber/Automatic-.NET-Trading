@@ -69,7 +69,7 @@ public static class Extensions
         services.AddSingleton<ITradingStrategy<LuxAlgoCandlestick>, LuxAlgoAndPsarTradingStrategyLong>(_ =>
         {
             TradingParameters tradingParameters = configuration.GetRequiredSection("LuxAlgoAndPsarTradingStrategyLong:TradingParameters").Get<TradingParameters>()!;
-            BinanceCfdTradingApiService BinanceContractTrader = new BinanceCfdTradingApiService(
+            BinanceApiService BinanceContractTrader = new BinanceApiService(
                 configuration.GetRequiredSection("LuxAlgoAndPsarTradingStrategyLong:CurrencyPair").Get<CurrencyPair>()!,
                 new ApiCredentials(configuration.GetValue<string>("BinanceApiCredentials:public")!, configuration.GetValue<string>("BinanceApiCredentials:private")!));
 
@@ -81,7 +81,7 @@ public static class Extensions
         services.AddSingleton<ITradingStrategy<LuxAlgoCandlestick>, LuxAlgoAndPsarTradingStrategyShort>(_ =>
         {
             TradingParameters tradingParameters = configuration.GetRequiredSection("LuxAlgoAndPsarTradingStrategyShort:TradingParameters").Get<TradingParameters>()!;
-            BinanceCfdTradingApiService BinanceContractTrader = new BinanceCfdTradingApiService(
+            BinanceApiService BinanceContractTrader = new BinanceApiService(
                 configuration.GetRequiredSection("LuxAlgoAndPsarTradingStrategyShort:CurrencyPair").Get<CurrencyPair>()!,
                 new ApiCredentials(configuration.GetValue<string>("BinanceApiCredentials:public")!, configuration.GetValue<string>("BinanceApiCredentials:private")!));
 
