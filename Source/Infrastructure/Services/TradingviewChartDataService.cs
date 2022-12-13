@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 using AutomaticDotNETtrading.Application.Interfaces.Services;
 using AutomaticDotNETtrading.Domain.Models;
-using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Mapping;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 
 using CsvHelper;
@@ -275,7 +274,7 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
             using (StreamReader reader = new StreamReader(path))
             using (CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                csv.Context.RegisterClassMap<CsvTVCandlestickMap>();
+                csv.Context.RegisterClassMap<LuxAlgoCandlestickMap>();
                 this.RegisteredTVCandlesticks = csv.GetRecords<LuxAlgoCandlestick>().ToList();
             }
             File.Delete(path);
