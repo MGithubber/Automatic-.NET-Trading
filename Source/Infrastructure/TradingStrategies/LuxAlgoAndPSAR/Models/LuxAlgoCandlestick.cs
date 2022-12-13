@@ -19,12 +19,12 @@ namespace AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR
 public class LuxAlgoCandlestick : Candlestick
 {
     // LuxAlgo indicator values
-    public bool Buy { get; set; } = false;
-    public bool StrongBuy { get; set; } = false;
-    public bool Sell { get; set; } = false;
-    public bool StrongSell { get; set; } = false;
-    public double ExitBuy { get; set; } = double.NaN;
-    public double ExitSell { get; set; } = double.NaN;
+    public required bool Buy { get; set; } = false;
+    public required bool StrongBuy { get; set; } = false;
+    public required bool Sell { get; set; } = false;
+    public required bool StrongSell { get; set; } = false;
+    public required double ExitBuy { get; set; } = double.NaN;
+    public required double ExitSell { get; set; } = double.NaN;
     public LuxAlgoSignal LuxAlgoSignal
     {
         get
@@ -44,5 +44,28 @@ public class LuxAlgoCandlestick : Candlestick
 
             return LuxAlgoSignal.Hold;
         }
+    }
+
+    
+    public override object Clone()
+    {
+        return new LuxAlgoCandlestick
+        {
+            CurrencyPair = (CurrencyPair)this.CurrencyPair.Clone(),
+
+            Date = this.Date,
+            Open = this.Open,
+            High = this.High,
+            Low = this.Low,
+            Close = this.Close,
+            Volume = this.Volume,
+
+            Buy = this.Buy,
+            StrongBuy = this.StrongBuy,
+            Sell = this.Sell,
+            StrongSell = this.StrongSell,
+            ExitBuy = this.ExitBuy,
+            ExitSell = this.ExitSell
+        };
     }
 }
