@@ -9,8 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using AutomaticDotNETtrading.Application.Interfaces.Services;
-using AutomaticDotNETtrading.Domain.Models;
-using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
+using AutomaticDotNETtrading.Infrastructure.Internal;
 
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -26,7 +25,7 @@ namespace AutomaticDotNETtrading.Infrastructure.Services;
 /// </summary>
 public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> where TCandlestick : IQuote
 {
-    private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
+    private readonly SemaphoreSlim Semaphore = new(1);
 
     private readonly IPlaywright playwright;
     private readonly IBrowserContext browser;
@@ -69,6 +68,7 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
         var browser = await playwright.Chromium.LaunchPersistentContextAsync(userDataDirectory, browserLaunchOptions);
 
         IPage page = await browser.NewPageAsync();
+        page.SetDefaultTimeout(500);
         await page.GotoAsync("https://www.tradingview.com/chart/oxqzhJn4/?symbol=BINANCE%3AETHBUSD");
 
         return new TradingviewService<TCandlestick>(browser, playwright, page, downloadsDirectory, converter, classMap);
@@ -98,13 +98,48 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
         #endregion
     }
 
+
     ////  ////  ////
 
-    private List<TCandlestick> RegisteredTVCandlesticks = new List<TCandlestick>();
+
+    private List<TCandlestick> RegisteredTVCandlesticks = new();
     public TCandlestick[] Candlesticks => this.RegisteredTVCandlesticks.ToArray();
 
-    ////  ////  ////
-    
+
+    private async Task DownloadCsvChartData(LocatorClickOptions options)
+    {
+        await this.ManageLayoutsButton_Locator.ClickAsync(options);
+        await this.ExportChartDataButton_Locator.ClickAsync(options);
+        await this.ExportChartDataConfirmButton_Locator.ClickAsync(options);
+    }
+    private async Task ZoomInChart(LocatorClickOptions options)
+    {
+        for (int i = 0; i < 25; i++)
+            await this.ZoomInButton_Locator.ClickAsync(options);
+    }
+    private void RegiserCandlestickFromCsvChartData(string path)
+    {
+        using StreamReader reader = new StreamReader(path);
+        using CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        
+        csv.Context.RegisterClassMap(this.ClassMap);
+        this.RegisteredTVCandlesticks = csv.GetRecords<TCandlestick>().ToList();
+    }
+    public async Task RegisterAllCandlesticksAsync()
+    {
+        using var _ = new LockedOperation(this.Semaphore);
+
+        var options = new LocatorClickOptions { Force = true };
+
+        await this.ZoomInChart(options);
+        await this.DownloadCsvChartData(options);
+        
+        string path = Directory.GetFiles(this.downloadsDirectory).First();
+        this.RegiserCandlestickFromCsvChartData(path);
+        File.Delete(path);
+    }
+
+
     private async Task<TCandlestick> GetLastCompleteCandlestickAsync()
     {
         int maxAttempts = 50;
@@ -172,28 +207,22 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
         #endregion
     }
 
+
     public async Task<TCandlestick> WaitForNextCandleAsync()
     {
-        try
-        {
-            await this.Semaphore.WaitAsync();
-            
-            TCandlestick LastCandle = await this.GetUnfinishedCandlestickAsync();
-            TCandlestick LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
-            TimeSpan difference = LastCandle.Date - LastCompleteCandle.Date;
+        using var _ = new LockedOperation(this.Semaphore);
 
-            // holds the program here until a new candlestick has been completed
-            while (LastCandle.Date - LastCompleteCandle.Date == difference)
-                LastCandle = await this.GetUnfinishedCandlestickAsync();
+        TCandlestick LastCandle = await this.GetUnfinishedCandlestickAsync();
+        TCandlestick LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
+        TimeSpan difference = LastCandle.Date - LastCompleteCandle.Date;
 
-            LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
-            this.RegisteredTVCandlesticks.Add(LastCompleteCandle);
-            return LastCompleteCandle;
-        }
-        finally
-        {
-            this.Semaphore.Release();
-        }
+        // holds the program here until a new candlestick has been completed
+        while (LastCandle.Date - LastCompleteCandle.Date == difference)
+            LastCandle = await this.GetUnfinishedCandlestickAsync();
+
+        LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
+        this.RegisteredTVCandlesticks.Add(LastCompleteCandle);
+        return LastCompleteCandle;
     }
     public async Task<TCandlestick> WaitForNextMatchingCandleAsync(params Predicate<TCandlestick>[] matches)
     {
@@ -205,70 +234,38 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
             return false;
         }
 
-        try
+
+        using var _ = new LockedOperation(this.Semaphore);
+
+        #region Valid input check
+        if (matches is null)
+            throw new ArgumentNullException(nameof(matches));
+
+        if (matches.Length == 0)
+            throw new ArgumentException($"No predicate was specified for {nameof(matches)}");
+        #endregion
+
+        TCandlestick LastCompleteCandle;
+        do
         {
-            await this.Semaphore.WaitAsync();
+            LastCompleteCandle = await this.WaitForNextCandleAsync();
+        } while (!OneMatches(LastCompleteCandle, matches));
 
-            #region Valid input check
-            if (matches is null)
-                throw new ArgumentNullException(nameof(matches));
-
-            if (matches.Length == 0)
-                throw new ArgumentException($"No predicate was specified for {nameof(matches)}");
-            #endregion
-
-            TCandlestick LastCompleteCandle;
-            do
-            {
-                LastCompleteCandle = await this.WaitForNextCandleAsync();
-            } while (!OneMatches(LastCompleteCandle, matches));
-
-            return LastCompleteCandle;
-        }
-        finally
-        {
-            this.Semaphore.Release();
-        }
+        return LastCompleteCandle;
     }
-   
-    public async Task<decimal> GetUnfinishedCandlestickOpenPriceAsync() => (await this.GetUnfinishedCandlestickAsync()).Open;
-    
-    public async Task RegisterAllCandlesticksAsync()
+
+
+    public async Task<decimal> GetUnfinishedCandlestickOpenPriceAsync()
     {
-        try
-        {
-            await this.Semaphore.WaitAsync();
-
-            var options = new LocatorClickOptions { Force = true };
-            
-            for (int i = 0; i < 25; i++) // max zoom
-                await this.ZoomInButton_Locator.ClickAsync(options);
-
-            #region Download the .csv file
-            await this.ManageLayoutsButton_Locator.ClickAsync(options);
-            await this.ExportChartDataButton_Locator.ClickAsync(options);
-            await this.ExportChartDataConfirmButton_Locator.ClickAsync(options);
-            #endregion
-
-            #region Read the .csv file
-            string path = Directory.GetFiles(this.downloadsDirectory).First();
-            using (StreamReader reader = new StreamReader(path))
-            using (CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                csv.Context.RegisterClassMap(this.ClassMap);
-                this.RegisteredTVCandlesticks = csv.GetRecords<TCandlestick>().ToList();
-            }
-            File.Delete(path);
-            #endregion
-        }
-        finally
-        {
-            this.Semaphore.Release();
-        }
+        using var _ = new LockedOperation(this.Semaphore);
+        
+        TCandlestick candlestick = await this.GetUnfinishedCandlestickAsync();
+        return candlestick.Open;
     }
+
 
     //// //// ////
-    
+
     public void Dispose()
     {
         try
