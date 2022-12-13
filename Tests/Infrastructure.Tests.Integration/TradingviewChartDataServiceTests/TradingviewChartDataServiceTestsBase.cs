@@ -10,7 +10,7 @@ using Bogus;
 namespace Infrastructure.Tests.Integration.TradingviewChartDataServiceTests;
 
 [TestFixture]
-public abstract class TradingviewChartDataServiceTestsBase
+public abstract class TradingviewServiceTestsBase
 {
     protected IChartDataService<LuxAlgoCandlestick> SUT; // = new TradingviewChartDataService();
     
