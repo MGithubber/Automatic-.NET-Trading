@@ -1,8 +1,4 @@
-﻿using System.Net;
-
-using CryptoExchange.Net.Authentication;
-
-namespace Presentation.Api;
+﻿namespace Presentation.Api;
 
 internal static class ProgramIO
 {
