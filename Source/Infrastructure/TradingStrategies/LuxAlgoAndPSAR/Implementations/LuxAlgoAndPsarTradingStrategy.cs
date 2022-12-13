@@ -94,12 +94,12 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
     }
     protected async Task PlaceNewStopLoss(decimal price)
     {
-        await this.ContractTrader.PlaceStopLossAsync(price);
+        var placedOrderCallResult = await this.ContractTrader.PlaceStopLossAsync(price);
         
         _ = this.ContractTrader.Position ?? throw new NullReferenceException($"{nameof(this.ContractTrader.Position)} was NULL");
         _ = this.ContractTrader.Position.StopLossOrder ?? throw new Exception($"Failed to place a futures stop loss order", new NullReferenceException(nameof(this.ContractTrader.Position)));
 
-        this.OnPositionClosed_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>(this.LastCandle, this.ContractTrader.Position.StopLossOrder));
+        this.OnStopLossUpdated_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder>(this.LastCandle, placedOrderCallResult.Data));
     }
 
     protected bool IsInPosition() => this.ContractTrader.IsInPosition();
