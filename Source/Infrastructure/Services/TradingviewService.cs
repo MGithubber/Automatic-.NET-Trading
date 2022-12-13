@@ -9,7 +9,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using AutomaticDotNETtrading.Application.Interfaces.Services;
+using AutomaticDotNETtrading.Domain.Models;
 using AutomaticDotNETtrading.Infrastructure.Internal;
+
+using Binance.Net.Enums;
 
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -27,14 +30,15 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
 {
     private readonly SemaphoreSlim Semaphore = new(1);
 
+    private readonly CurrencyPair CurrencyPair;
+    private readonly KlineInterval Timeframe;
+
     private readonly IPlaywright playwright;
     private readonly IBrowserContext browser;
+    private readonly IPage page;
 
     private readonly string downloadsDirectory;
-
-    /// <summary>
-    /// Converts the data window text into a <see cref="TCandlestick"/> object
-    /// </summary>
+    
     private readonly Func<string, TCandlestick> Converter;
     private readonly ClassMap<TCandlestick> ClassMap;
      
@@ -53,7 +57,7 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
     private readonly ILocator ExportChartDataConfirmButton_Locator;
     #endregion
 
-    public static async Task<TradingviewService<TCandlestick>> CreateAsync(Func<string, TCandlestick> converter, ClassMap<TCandlestick> classMap, string userDataDirectory, string downloadsDirectory)
+    public static async Task<TradingviewService<TCandlestick>> CreateAsync(CurrencyPair currencyPair, KlineInterval timeframe, Func<string, TCandlestick> converter, ClassMap<TCandlestick> classMap, string userDataDirectory, string downloadsDirectory)
     {
         var browserLaunchOptions = new BrowserTypeLaunchPersistentContextOptions
         {
@@ -68,15 +72,19 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
         var browser = await playwright.Chromium.LaunchPersistentContextAsync(userDataDirectory, browserLaunchOptions);
 
         IPage page = await browser.NewPageAsync();
-        page.SetDefaultTimeout(500);
         await page.GotoAsync("https://www.tradingview.com/chart/oxqzhJn4/?symbol=BINANCE%3AETHBUSD");
 
-        return new TradingviewService<TCandlestick>(browser, playwright, page, downloadsDirectory, converter, classMap);
+        return new TradingviewService<TCandlestick>(currencyPair, timeframe, browser, playwright, page, downloadsDirectory, converter, classMap);
     }
-    protected internal TradingviewService(IBrowserContext browser, IPlaywright playwright, IPage page, string downloadsDirectory, Func<string, TCandlestick> converter, ClassMap<TCandlestick> classMap)
+    protected internal TradingviewService(CurrencyPair currencyPair, KlineInterval timeframe, IBrowserContext browser, IPlaywright playwright, IPage page, string downloadsDirectory, Func<string, TCandlestick> converter, ClassMap<TCandlestick> classMap)
     {
+        this.CurrencyPair = currencyPair;
+        this.Timeframe = timeframe;
+
         this.browser = browser;
         this.playwright = playwright;
+        this.page = page;
+
         this.downloadsDirectory = downloadsDirectory;
 
         this.Converter = converter;
@@ -106,11 +114,11 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
     public TCandlestick[] Candlesticks => this.RegisteredTVCandlesticks.ToArray();
 
 
-    private async Task DownloadCsvChartData(LocatorClickOptions options)
+    private async Task DownloadCsvChartData()
     {
-        await this.ManageLayoutsButton_Locator.ClickAsync(options);
-        await this.ExportChartDataButton_Locator.ClickAsync(options);
-        await this.ExportChartDataConfirmButton_Locator.ClickAsync(options);
+        await this.ManageLayoutsButton_Locator.ClickAsync();
+        await this.ExportChartDataButton_Locator.ClickAsync();
+        await this.ExportChartDataConfirmButton_Locator.ClickAsync();
     }
     private async Task ZoomInChart(LocatorClickOptions options)
     {
@@ -125,21 +133,31 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
         csv.Context.RegisterClassMap(this.ClassMap);
         this.RegisteredTVCandlesticks = csv.GetRecords<TCandlestick>().ToList();
     }
+    private async Task GotoChart()
+    {
+        // Selects the chart
+        await this.page.Keyboard.TypeAsync(this.CurrencyPair.Name);
+        await this.page.Keyboard.PressAsync("ArrowDown");
+        await this.page.Keyboard.PressAsync("Enter");
+
+        // Selects the timeframe
+        await this.page.Keyboard.TypeAsync(((int)this.Timeframe / 60).ToString());
+        await this.page.Keyboard.PressAsync("Enter");
+    }
     public async Task RegisterAllCandlesticksAsync()
     {
         using var _ = new LockedOperation(this.Semaphore);
 
-        var options = new LocatorClickOptions { Force = true };
-
-        await this.ZoomInChart(options);
-        await this.DownloadCsvChartData(options);
+        await this.GotoChart();
         
+        await this.ZoomInChart(new LocatorClickOptions { Force = true });
+        await this.DownloadCsvChartData();
+
         string path = Directory.GetFiles(this.downloadsDirectory).First();
         this.RegiserCandlestickFromCsvChartData(path);
         File.Delete(path);
     }
-
-
+    
     private async Task<TCandlestick> GetLastCompleteCandlestickAsync()
     {
         int maxAttempts = 50;

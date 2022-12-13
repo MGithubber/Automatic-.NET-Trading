@@ -11,6 +11,8 @@ using AutomaticDotNETtrading.Infrastructure.Services;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Implementations;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 
+using Binance.Net.Enums;
+
 using CryptoExchange.Net.Authentication;
 
 namespace Presentation.Api;
@@ -56,6 +58,8 @@ public static class Extensions
         
         services.AddSingleton<IChartDataService<LuxAlgoCandlestick>, TradingviewService<LuxAlgoCandlestick>>(_ =>
             TradingviewService<LuxAlgoCandlestick>.CreateAsync(
+                new CurrencyPair("ETH", "BUSD"),
+                KlineInterval.FifteenMinutes,
                 DataWindowText_to_LuxAlgoCandlestick,
                 new LuxAlgoCandlestickMap(),
                 ProgramIO.UserDataDirectory.FullName,

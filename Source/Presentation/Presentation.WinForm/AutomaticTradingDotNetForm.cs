@@ -136,6 +136,8 @@ public partial class AutomaticTradingDotNetForm : Form
         
         services.AddSingleton<IChartDataService<LuxAlgoCandlestick>, TradingviewService<LuxAlgoCandlestick>>(_ =>
             TradingviewService<LuxAlgoCandlestick>.CreateAsync(
+                new CurrencyPair("ETH", "BUSD"),
+                KlineInterval.FifteenMinutes,
                 text => 
                 {
                     List<string> data_window_lines = text.Replace("\r\n", "\n").Split('\n').ToList();
