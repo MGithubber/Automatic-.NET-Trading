@@ -54,30 +54,6 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
     private readonly ILocator ExportChartDataConfirmButton_Locator;
     #endregion
 
-    protected internal TradingviewService(IBrowserContext browser, IPlaywright playwright, IPage page, string downloadsDirectory, Func<string, TCandlestick> converter, ClassMap<TCandlestick> classMap)
-    {
-        this.browser = browser;
-        this.playwright = playwright;
-        this.downloadsDirectory = downloadsDirectory;
-        
-        this.Converter = converter;
-        this.ClassMap = classMap;
-
-        #region Locators
-        this.DataWindow_Locator = page.Locator(".chart-data-window");
-        this.Chart_Locator = page.Locator(".chart-gui-wrapper").First;
-
-        this.ZoomInButton_Locator = page.Locator(".control-bar__btn--zoom-in");
-        this.ZoomOutButton_Locator = page.Locator(".control-bar__btn--zoom-out");
-        this.ScrollLeftButton_Locator = page.Locator(".control-bar__btn--move-left");
-        this.ScrollRightButton_Locator = page.Locator(".control-bar__btn--move-right");
-        this.ResetChartButton_Locator = page.Locator(".control-bar__btn--turn-button");
-
-        this.ManageLayoutsButton_Locator = page.Locator(".js-save-load-menu-open-button").First;
-        this.ExportChartDataButton_Locator = page.GetByText("Export chart data").First;
-        this.ExportChartDataConfirmButton_Locator = page.GetByText("Export").Nth(1);
-        #endregion
-    }
     public static async Task<TradingviewService<TCandlestick>> CreateAsync(Func<string, TCandlestick> converter, ClassMap<TCandlestick> classMap, string userDataDirectory, string downloadsDirectory)
     {
         var browserLaunchOptions = new BrowserTypeLaunchPersistentContextOptions
@@ -96,6 +72,30 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
         await page.GotoAsync("https://www.tradingview.com/chart/oxqzhJn4/?symbol=BINANCE%3AETHBUSD");
 
         return new TradingviewService<TCandlestick>(browser, playwright, page, downloadsDirectory, converter, classMap);
+    }
+    protected internal TradingviewService(IBrowserContext browser, IPlaywright playwright, IPage page, string downloadsDirectory, Func<string, TCandlestick> converter, ClassMap<TCandlestick> classMap)
+    {
+        this.browser = browser;
+        this.playwright = playwright;
+        this.downloadsDirectory = downloadsDirectory;
+
+        this.Converter = converter;
+        this.ClassMap = classMap;
+
+        #region Locators
+        this.DataWindow_Locator = page.Locator(".chart-data-window");
+        this.Chart_Locator = page.Locator(".chart-gui-wrapper").First;
+
+        this.ZoomInButton_Locator = page.Locator(".control-bar__btn--zoom-in");
+        this.ZoomOutButton_Locator = page.Locator(".control-bar__btn--zoom-out");
+        this.ScrollLeftButton_Locator = page.Locator(".control-bar__btn--move-left");
+        this.ScrollRightButton_Locator = page.Locator(".control-bar__btn--move-right");
+        this.ResetChartButton_Locator = page.Locator(".control-bar__btn--turn-button");
+
+        this.ManageLayoutsButton_Locator = page.Locator(".js-save-load-menu-open-button").First;
+        this.ExportChartDataButton_Locator = page.GetByText("Export chart data").First;
+        this.ExportChartDataConfirmButton_Locator = page.GetByText("Export").Nth(1);
+        #endregion
     }
 
     ////  ////  ////
