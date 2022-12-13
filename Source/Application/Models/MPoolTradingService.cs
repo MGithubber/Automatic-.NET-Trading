@@ -53,6 +53,7 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
         this.TradingStrategies.ForEach(trader =>
         {
             trader.OnPositionOpened += Trader_OnPositionOpened;
+            trader.OnStopLossUpdated += Trader_OnStopLossUpdated;
             trader.OnPositionClosed += Trader_OnPositionClosed;
         });
         void Trader_OnPositionOpened(object? sender, KeyValuePair<TCandlestick, FuturesPosition> e)
@@ -61,6 +62,10 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
             .Where(order => order is not null)
             .ToList()
             .ForEach(order => this.TradingDataDbService.AddFuturesOrderAsync(order, e.Key).GetAwaiter().GetResult());
+        }
+        void Trader_OnStopLossUpdated(object? sender, KeyValuePair<TCandlestick, BinanceFuturesOrder> e)
+        {
+            this.TradingDataDbService.AddFuturesOrderAsync(e.Value, e.Key).GetAwaiter().GetResult();
         }
         void Trader_OnPositionClosed(object? sender, KeyValuePair<TCandlestick, BinanceFuturesOrder> e)
         {
