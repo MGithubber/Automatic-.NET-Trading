@@ -25,7 +25,7 @@ public class Candlestick : IQuote, ICloneable
     public bool IsBearish => this.Close < this.Open;
     public bool IsDoji => this.Close == this.Open;
 
-    public object Clone()
+    public virtual object Clone()
     {
         return new Candlestick
         {
