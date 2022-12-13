@@ -28,24 +28,26 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
     private readonly ITradingDataDbService<TCandlestick> TradingDataDbService = default!;
     private readonly List<ITradingStrategy<TCandlestick>>? TradingStrategies = null;
     public int NrTradingStrategies => this.TradingStrategies!.Count;
-    
+
+    private void CheckInput(IEnumerable<ITradingStrategy<TCandlestick>> traders)
+    {
+        if (!traders.Any())
+            throw new ArgumentException(nameof(this.TradingStrategies));
+
+        IEnumerable<ICfdTradingApiService> contractTraders = this.TradingStrategies!.Select(strategy => strategy.ContractTrader);
+        if (contractTraders.Count() != contractTraders.Distinct().Count())
+            throw new ArgumentException($"The {nameof(traders)} collection can't contain multiple elements having the same {nameof(ICfdTradingApiService)} as a property", nameof(traders));
+    }
     public MPoolTradingService(IChartDataService<TCandlestick> chartDataService, ITradingDataDbService<TCandlestick> tradingDataDbService, IEnumerable<ITradingStrategy<TCandlestick>> traders)
     {
         this.ChartDataService = chartDataService ?? throw new ArgumentNullException(nameof(chartDataService));
         this.TradingDataDbService = tradingDataDbService ?? throw new ArgumentNullException(nameof(tradingDataDbService));
         this.TradingStrategies = traders is not null ? traders.ToList() : throw new ArgumentNullException(nameof(traders));
 
-        #region Input error checks
-        if (!traders.Any())
-            throw new ArgumentException(nameof(this.TradingStrategies));
+        this.CheckInput(traders);
         
-        IEnumerable<ICfdTradingApiService> contractTraders = this.TradingStrategies.Select(strategy => strategy.ContractTrader);
-        if (contractTraders.Count() != contractTraders.Distinct().Count())
-            throw new ArgumentException();
-        #endregion
-
         //// ////
-        
+
         this.OnNewCandlestickRegistered += (object? sender, TCandlestick e) => this.TradingDataDbService.AddCandlestickAsync(e);
 
         this.TradingStrategies.ForEach(trader =>
