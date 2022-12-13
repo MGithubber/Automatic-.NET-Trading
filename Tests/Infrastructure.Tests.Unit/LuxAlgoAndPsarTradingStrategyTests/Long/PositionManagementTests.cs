@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using AutomaticDotNETtrading.Infrastructure.Enums;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Enums;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Implementations;
-using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Mapping;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 using Binance.Net.Objects.Models.Futures;
 
