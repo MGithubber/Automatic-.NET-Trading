@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -244,15 +245,6 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
     }
     public async Task<TCandlestick> WaitForNextMatchingCandleAsync(params Predicate<TCandlestick>[] matches)
     {
-        bool OneMatches(TCandlestick candle, IEnumerable<Predicate<TCandlestick>> match_arr)
-        {
-            foreach (Predicate<TCandlestick> match in matches)
-                if (match.Invoke(candle))
-                    return true;
-            return false;
-        }
-
-
         using var _ = new LockedOperation(this.Semaphore);
 
         #region Valid input check
@@ -267,7 +259,7 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
         do
         {
             LastCompleteCandle = await this.WaitForNextCandleAsync();
-        } while (!OneMatches(LastCompleteCandle, matches));
+        } while (matches.Any(match => match.Invoke(LastCompleteCandle)));
 
         return LastCompleteCandle;
     }
