@@ -79,13 +79,13 @@ public partial class AutomaticTradingDotNetForm : Form
                 this.OutputTextBox.BeginInvoke(() => this.OutputTextBox.Text = builder.ToString().ReplaceLineEndings());
             });
         }
-        void LuxAlgoPsar_OnStopLossUpdated(object? sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder> e)
+        void LuxAlgoPsar_OnStopLossUpdated(object? sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder> e)
         {
             Task.Run(() =>
             {
                 _ = sender ?? throw new NullReferenceException($"{nameof(sender)} was NULL");
 
-                BinanceFuturesPlacedOrder StopLossOrder = e.Value;
+                BinanceFuturesOrder StopLossOrder = e.Value;
                 string SymbolName = StopLossOrder.Symbol;
                 string Side = StopLossOrder.Side.ToString().ToUpper();
 

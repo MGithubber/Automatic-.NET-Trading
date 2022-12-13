@@ -33,13 +33,13 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
 
     #region Events
     public event EventHandler<KeyValuePair<LuxAlgoCandlestick, FuturesPosition>>? OnPositionOpened;
-    public event EventHandler<KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder>>? OnStopLossUpdated;
+    public event EventHandler<KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>>? OnStopLossUpdated;
     public event EventHandler<LuxAlgoCandlestick>? OnStopOutDetected;
     public event EventHandler<KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>>? OnPositionClosed;
     public event EventHandler<Dictionary<LuxAlgoCandlestick, decimal>>? OnParabolicSARdivergence;
     
     protected void OnPositionOpened_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, FuturesPosition> e) => this.OnPositionOpened?.Invoke(sender, e);
-    protected void OnStopLossUpdated_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder> e) => this.OnStopLossUpdated?.Invoke(sender, e);
+    protected void OnStopLossUpdated_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder> e) => this.OnStopLossUpdated?.Invoke(sender, e);
     protected void OnStopOutDetected_Invoke(object sender, LuxAlgoCandlestick e) => this.OnStopOutDetected?.Invoke(sender, e);
     protected void OnPositionClosed_Invoke(object sender, KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder> e) => this.OnPositionClosed?.Invoke(sender, e);
     protected void OnParabolicSARdivergence_Invoke(object sender, Dictionary<LuxAlgoCandlestick, decimal> e) => this.OnParabolicSARdivergence?.Invoke(sender, e);
@@ -94,12 +94,12 @@ public abstract class LuxAlgoAndPsarTradingStrategy : ITradingStrategy<LuxAlgoCa
     }
     protected async Task PlaceNewStopLoss(decimal price)
     {
-        var placedOrderCallResult = await this.ContractTrader.PlaceStopLossAsync(price);
+        await this.ContractTrader.PlaceStopLossAsync(price);
         
         _ = this.ContractTrader.Position ?? throw new NullReferenceException($"{nameof(this.ContractTrader.Position)} was NULL");
         _ = this.ContractTrader.Position.StopLossOrder ?? throw new Exception($"Failed to place a futures stop loss order", new NullReferenceException(nameof(this.ContractTrader.Position)));
 
-        this.OnStopLossUpdated_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, BinanceFuturesPlacedOrder>(this.LastCandle, placedOrderCallResult.Data));
+        this.OnStopLossUpdated_Invoke(this, new KeyValuePair<LuxAlgoCandlestick, BinanceFuturesOrder>(this.LastCandle, this.ContractTrader.Position.StopLossOrder));
     }
 
     protected bool IsInPosition() => this.ContractTrader.IsInPosition();
