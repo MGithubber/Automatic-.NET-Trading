@@ -254,7 +254,7 @@ public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> 
         if (matches.Length == 0)
             throw new ArgumentException($"No predicate was specified for {nameof(matches)}");
         #endregion
-
+        
         TCandlestick LastCompleteCandle;
         do
         {
