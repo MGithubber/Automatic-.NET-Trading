@@ -17,6 +17,7 @@ public interface ITradingStrategy<TCandlestick> : IDisposable where TCandlestick
     public ICfdTradingApiService ContractTrader { get; }
     
     public event EventHandler<KeyValuePair<TCandlestick, FuturesPosition>> OnPositionOpened;
+    public event EventHandler<KeyValuePair<TCandlestick, BinanceFuturesPlacedOrder>>? OnStopLossUpdated;
     public event EventHandler<KeyValuePair<TCandlestick, BinanceFuturesOrder>> OnPositionClosed;
     
     public void SendData(TCandlestick[] Candlesticks, decimal LastOpenPrice);
