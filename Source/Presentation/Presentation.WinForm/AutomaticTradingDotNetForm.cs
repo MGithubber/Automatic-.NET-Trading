@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Text;
 using System.Xml.Serialization;
 
@@ -133,11 +134,44 @@ public partial class AutomaticTradingDotNetForm : Form
         services.AddSingleton<IDatabaseConnectionFactory<SqlConnection>, SqlDatabaseConnectionFactory>(_ => new SqlDatabaseConnectionFactory(ProgramIO.ConnectionString));
         services.AddSingleton<ITradingDataDbService<LuxAlgoCandlestick>, TradingDataDbService>();
         
-        services.AddSingleton<IChartDataService<LuxAlgoCandlestick>, TradingviewChartDataService>(_ => 
-            TradingviewChartDataService.CreateAsync(ProgramIO.UserDataDirectory.FullName,
-                                                    ProgramIO.ChromeDownloadsDirectory.FullName)
-                                                    .GetAwaiter().GetResult());
-        
+        services.AddSingleton<IChartDataService<LuxAlgoCandlestick>, TradingviewService<LuxAlgoCandlestick>>(_ =>
+            TradingviewService<LuxAlgoCandlestick>.CreateAsync(
+                text => 
+                {
+                    List<string> data_window_lines = text.Replace("\r\n", "\n").Split('\n').ToList();
+                    List<string> desired_strings = new List<string>() { "Date", "Time", "Open", "Close", "High", "Low", "Buy", "Strong Buy", "Sell", "Strong Sell", "Exit Buy", "Exit Sell" };
+
+                    data_window_lines.RemoveAll(line => !desired_strings.Any(desired => line.StartsWith(desired)));
+                    desired_strings.ToList().ForEach(desired_str =>
+                    {
+                        int index = data_window_lines.FindIndex(item => item.StartsWith(desired_str)); // find index of desired string in list
+                        data_window_lines[index] = data_window_lines[index].Replace(desired_str, string.Empty);
+                    });
+
+                    return new LuxAlgoCandlestick
+                    {
+                        CurrencyPair = new CurrencyPair("ETH", "BUSD"),
+
+                        Date = DateTime.Parse(data_window_lines[1], CultureInfo.InvariantCulture),
+
+                        Open = decimal.Parse(data_window_lines[2], CultureInfo.InvariantCulture),
+                        High = decimal.Parse(data_window_lines[3], CultureInfo.InvariantCulture),
+                        Low = decimal.Parse(data_window_lines[4], CultureInfo.InvariantCulture),
+                        Close = decimal.Parse(data_window_lines[5], CultureInfo.InvariantCulture),
+
+                        Buy = decimal.Parse(data_window_lines[6], CultureInfo.InvariantCulture) == decimal.One,
+                        StrongBuy = decimal.Parse(data_window_lines[7], CultureInfo.InvariantCulture) == decimal.One,
+                        Sell = decimal.Parse(data_window_lines[8], CultureInfo.InvariantCulture) == decimal.One,
+                        StrongSell = decimal.Parse(data_window_lines[9], CultureInfo.InvariantCulture) == decimal.One,
+                        ExitBuy = double.Parse(data_window_lines[10].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture),
+                        ExitSell = double.Parse(data_window_lines[11].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture)
+                    };
+                },
+                new LuxAlgoCandlestickMap(),
+                ProgramIO.UserDataDirectory.FullName,
+                ProgramIO.ChromeDownloadsDirectory.FullName)
+                .GetAwaiter().GetResult());
+
         services.AddSingleton<ITradingStrategy<LuxAlgoCandlestick>, LuxAlgoAndPsarTradingStrategyLong>(_ =>
         {
             TradingParameters tradingParameters = ReadXMLfile(ProgramIO.TradingParametersXmlFile_Long);

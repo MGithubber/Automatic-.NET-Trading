@@ -13,23 +13,32 @@ using AutomaticDotNETtrading.Domain.Models;
 using AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR.Models;
 
 using CsvHelper;
+using CsvHelper.Configuration;
 
 using Microsoft.Playwright;
+
+using Skender.Stock.Indicators;
 
 namespace AutomaticDotNETtrading.Infrastructure.Services;
 
 /// <summary>
 /// Represents an immutable object providing methods for extracting chart data from https://www.tradingview.com using google chrome
 /// </summary>
-public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
+public class TradingviewService<TCandlestick> : IChartDataService<TCandlestick> where TCandlestick : IQuote
 {
     private readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
 
-    private IPlaywright playwright;
-    private IBrowserContext browser;
+    private readonly IPlaywright playwright;
+    private readonly IBrowserContext browser;
 
-    private string downloadsDirectory;
-    
+    private readonly string downloadsDirectory;
+
+    /// <summary>
+    /// Converts the data window text into a <see cref="TCandlestick"/> object
+    /// </summary>
+    private readonly Func<string, TCandlestick> Converter;
+    private readonly ClassMap<TCandlestick> ClassMap;
+     
     #region Locators
     private readonly ILocator DataWindow_Locator;
     private readonly ILocator Chart_Locator;
@@ -45,12 +54,15 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
     private readonly ILocator ExportChartDataConfirmButton_Locator;
     #endregion
 
-    protected internal TradingviewChartDataService(IBrowserContext browser, IPlaywright playwright, IPage page, string downloadsDirectory)
+    protected internal TradingviewService(IBrowserContext browser, IPlaywright playwright, IPage page, string downloadsDirectory, Func<string, TCandlestick> converter, ClassMap<TCandlestick> classMap)
     {
         this.browser = browser;
         this.playwright = playwright;
         this.downloadsDirectory = downloadsDirectory;
         
+        this.Converter = converter;
+        this.ClassMap = classMap;
+
         #region Locators
         this.DataWindow_Locator = page.Locator(".chart-data-window");
         this.Chart_Locator = page.Locator(".chart-gui-wrapper").First;
@@ -66,7 +78,7 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
         this.ExportChartDataConfirmButton_Locator = page.GetByText("Export").Nth(1);
         #endregion
     }
-    public static async Task<TradingviewChartDataService> CreateAsync(string userDataDirectory, string downloadsDirectory)
+    public static async Task<TradingviewService<TCandlestick>> CreateAsync(Func<string, TCandlestick> converter, ClassMap<TCandlestick> classMap, string userDataDirectory, string downloadsDirectory)
     {
         var browserLaunchOptions = new BrowserTypeLaunchPersistentContextOptions
         {
@@ -83,48 +95,17 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
         IPage page = await browser.NewPageAsync();
         await page.GotoAsync("https://www.tradingview.com/chart/oxqzhJn4/?symbol=BINANCE%3AETHBUSD");
 
-        return new TradingviewChartDataService(browser, playwright, page, downloadsDirectory);
+        return new TradingviewService<TCandlestick>(browser, playwright, page, downloadsDirectory, converter, classMap);
     }
 
     ////  ////  ////
 
-    private List<LuxAlgoCandlestick> RegisteredTVCandlesticks = new List<LuxAlgoCandlestick>();
-    public LuxAlgoCandlestick[] Candlesticks => this.RegisteredTVCandlesticks.ToArray();
+    private List<TCandlestick> RegisteredTVCandlesticks = new List<TCandlestick>();
+    public TCandlestick[] Candlesticks => this.RegisteredTVCandlesticks.ToArray();
 
     ////  ////  ////
     
-    private LuxAlgoCandlestick TextToCandlestick(string text)
-    {
-        List<string> data_window_lines = text.Replace("\r\n", "\n").Split('\n').ToList();
-        List<string> desired_strings = new List<string>() { "Date", "Time", "Open", "Close", "High", "Low", "Buy", "Strong Buy", "Sell", "Strong Sell", "Exit Buy", "Exit Sell" };
-
-        data_window_lines.RemoveAll(line => !desired_strings.Any(desired => line.StartsWith(desired)));
-        desired_strings.ToList().ForEach(desired_str =>
-        {
-            int index = data_window_lines.FindIndex(item => item.StartsWith(desired_str)); // find index of desired string in list
-            data_window_lines[index] = data_window_lines[index].Replace(desired_str, string.Empty);
-        });
-
-        return new LuxAlgoCandlestick
-        {
-            CurrencyPair = new CurrencyPair("ETH", "BUSD"),
-
-            Date = DateTime.Parse(data_window_lines[1], CultureInfo.InvariantCulture),
-
-            Open = decimal.Parse(data_window_lines[2], CultureInfo.InvariantCulture),
-            High = decimal.Parse(data_window_lines[3], CultureInfo.InvariantCulture),
-            Low = decimal.Parse(data_window_lines[4], CultureInfo.InvariantCulture),
-            Close = decimal.Parse(data_window_lines[5], CultureInfo.InvariantCulture),
-
-            Buy = decimal.Parse(data_window_lines[6], CultureInfo.InvariantCulture) == decimal.One,
-            StrongBuy = decimal.Parse(data_window_lines[7], CultureInfo.InvariantCulture) == decimal.One,
-            Sell = decimal.Parse(data_window_lines[8], CultureInfo.InvariantCulture) == decimal.One,
-            StrongSell = decimal.Parse(data_window_lines[9], CultureInfo.InvariantCulture) == decimal.One,
-            ExitBuy = double.Parse(data_window_lines[10].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture),
-            ExitSell = double.Parse(data_window_lines[11].Replace("∅", "NaN").Replace("n/a", "NaN").Replace("N/A", "NaN"), CultureInfo.InvariantCulture)
-        };
-    }
-    private async Task<LuxAlgoCandlestick> GetLastCompleteCandlestickAsync()
+    private async Task<TCandlestick> GetLastCompleteCandlestickAsync()
     {
         int maxAttempts = 50;
         for (int i = 0; i < maxAttempts; i++)
@@ -141,7 +122,7 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
                     }
                 });
 
-                return TextToCandlestick(await this.DataWindow_Locator.InnerTextAsync());
+                return this.Converter.Invoke(await this.DataWindow_Locator.InnerTextAsync());
             }
             catch
             {
@@ -157,7 +138,7 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
         throw new Exception(builder.ToString());
         #endregion
     }
-    private async Task<LuxAlgoCandlestick> GetUnfinishedCandlestickAsync()
+    private async Task<TCandlestick> GetUnfinishedCandlestickAsync()
     {
         int maxAttempts = 50;
         for (int i = 0; i < maxAttempts; i++)
@@ -173,8 +154,8 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
                         Y = (float)(0.5 * boundingBox!.Height)
                     }
                 });
-
-                return TextToCandlestick(await this.DataWindow_Locator.InnerTextAsync());
+                
+                return this.Converter.Invoke(await this.DataWindow_Locator.InnerTextAsync());
             }
             catch
             {
@@ -191,14 +172,14 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
         #endregion
     }
 
-    public async Task<LuxAlgoCandlestick> WaitForNextCandleAsync()
+    public async Task<TCandlestick> WaitForNextCandleAsync()
     {
         try
         {
             await this.Semaphore.WaitAsync();
             
-            LuxAlgoCandlestick LastCandle = await this.GetUnfinishedCandlestickAsync();
-            LuxAlgoCandlestick LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
+            TCandlestick LastCandle = await this.GetUnfinishedCandlestickAsync();
+            TCandlestick LastCompleteCandle = await this.GetLastCompleteCandlestickAsync();
             TimeSpan difference = LastCandle.Date - LastCompleteCandle.Date;
 
             // holds the program here until a new candlestick has been completed
@@ -214,11 +195,11 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
             this.Semaphore.Release();
         }
     }
-    public async Task<LuxAlgoCandlestick> WaitForNextMatchingCandleAsync(params Predicate<LuxAlgoCandlestick>[] matches)
+    public async Task<TCandlestick> WaitForNextMatchingCandleAsync(params Predicate<TCandlestick>[] matches)
     {
-        bool OneMatches(LuxAlgoCandlestick candle, IEnumerable<Predicate<LuxAlgoCandlestick>> match_arr)
+        bool OneMatches(TCandlestick candle, IEnumerable<Predicate<TCandlestick>> match_arr)
         {
-            foreach (Predicate<LuxAlgoCandlestick> match in matches)
+            foreach (Predicate<TCandlestick> match in matches)
                 if (match.Invoke(candle))
                     return true;
             return false;
@@ -236,7 +217,7 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
                 throw new ArgumentException($"No predicate was specified for {nameof(matches)}");
             #endregion
 
-            LuxAlgoCandlestick LastCompleteCandle;
+            TCandlestick LastCompleteCandle;
             do
             {
                 LastCompleteCandle = await this.WaitForNextCandleAsync();
@@ -274,8 +255,8 @@ public class TradingviewChartDataService : IChartDataService<LuxAlgoCandlestick>
             using (StreamReader reader = new StreamReader(path))
             using (CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                csv.Context.RegisterClassMap<LuxAlgoCandlestickMap>();
-                this.RegisteredTVCandlesticks = csv.GetRecords<LuxAlgoCandlestick>().ToList();
+                csv.Context.RegisterClassMap(this.ClassMap);
+                this.RegisteredTVCandlesticks = csv.GetRecords<TCandlestick>().ToList();
             }
             File.Delete(path);
             #endregion

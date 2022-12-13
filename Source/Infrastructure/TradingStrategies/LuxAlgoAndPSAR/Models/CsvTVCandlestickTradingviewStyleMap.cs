@@ -16,7 +16,7 @@ namespace AutomaticDotNETtrading.Infrastructure.TradingStrategies.LuxAlgoAndPSAR
 /// <para>Represents a class that can be used to read objects of type <see cref="LuxAlgoCandlestick"/> from .csv files that https://www.tradingview.com exports</para>
 /// <para>Can be used for both reading and writing and uses <see cref="CultureInfo.InvariantCulture"/></para>
 /// </summary>
-internal class LuxAlgoCandlestickMap : ClassMap<LuxAlgoCandlestick>
+public class LuxAlgoCandlestickMap : ClassMap<LuxAlgoCandlestick>
 {
     protected static DateTime ParseDateTime(ConvertFromStringArgs args)
     {
@@ -31,7 +31,7 @@ internal class LuxAlgoCandlestickMap : ClassMap<LuxAlgoCandlestick>
         throw new ReaderException(args.Row.Context, $"The specified string \"{string_to_parse}\" was not recognized as a valid {nameof(CultureInfo.InvariantCulture)} {nameof(DateTime)} string representation", new FormatException("The string was not recognized as a valid DateTime"));
     }
 
-    protected internal LuxAlgoCandlestickMap()
+    public LuxAlgoCandlestickMap()
     {
         this.Map(candlestick => candlestick.Date).Name("time").Convert(args => ParseDateTime(args));
 
