@@ -28,13 +28,11 @@ public static class Extensions
         services.AddSingleton<ITradingDataDbService<LuxAlgoCandlestick>, TradingDataDbService>();
 
         services.AddSingleton<IChartDataService<LuxAlgoCandlestick>, TradingviewChartDataService>(_ =>
-        {
-            return new TradingviewChartDataService(
-                chromeDriverDirectory: ProgramIO.ChromeDriverDirectory.FullName,
-                userDataDirectory: ProgramIO.UserDataDirectory.FullName,
-                downloadsDirectory: ProgramIO.ChromeDownloadsDirectory.FullName);
-        });
-        
+            TradingviewChartDataService.CreateAsync(
+                ProgramIO.UserDataDirectory.FullName,
+                ProgramIO.ChromeDownloadsDirectory.FullName)
+                .GetAwaiter().GetResult());
+
         services.AddSingleton<ITradingStrategy<LuxAlgoCandlestick>, LuxAlgoAndPsarTradingStrategyLong>(_ =>
         {
             TradingParameters tradingParameters = configuration.GetRequiredSection("LuxAlgoAndPsarTradingStrategyLong:TradingParameters").Get<TradingParameters>()!;
