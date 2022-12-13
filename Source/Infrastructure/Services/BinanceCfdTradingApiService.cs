@@ -24,7 +24,7 @@ using AutomaticDotNETtrading.Application.Interfaces.Services;
 
 namespace AutomaticDotNETtrading.Infrastructure.Services;
 
-public class BinanceCfdTradingApiService : ICfdTradingApiService
+public class BinanceApiService : ICfdTradingApiService
 {
     public CurrencyPair CurrencyPair { get; }
     private readonly IBinanceClient BinanceClient;
@@ -34,7 +34,7 @@ public class BinanceCfdTradingApiService : ICfdTradingApiService
 
     public decimal Leverage { get; }
     
-    public BinanceCfdTradingApiService(CurrencyPair CurrencyPair, ApiCredentials ApiCredentials, decimal Leverage = 10)
+    public BinanceApiService(CurrencyPair CurrencyPair, ApiCredentials ApiCredentials, decimal Leverage = 10)
     {
         this.CurrencyPair = CurrencyPair ?? throw new ArgumentNullException(nameof(CurrencyPair));
         
