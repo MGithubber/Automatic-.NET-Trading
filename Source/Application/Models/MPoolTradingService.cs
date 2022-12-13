@@ -36,7 +36,7 @@ public class MPoolTradingService<TCandlestick, TDatabaseConnection> : IPoolTradi
         this.TradingStrategies = traders is not null ? traders.ToList() : throw new ArgumentNullException(nameof(traders));
 
         #region Input error checks
-        if (traders.Count() == 0)
+        if (!traders.Any())
             throw new ArgumentException(nameof(this.TradingStrategies));
         
         IEnumerable<ICfdTradingApiService> contractTraders = this.TradingStrategies.Select(strategy => strategy.ContractTrader);
