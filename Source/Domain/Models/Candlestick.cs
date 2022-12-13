@@ -10,20 +10,20 @@ namespace AutomaticDotNETtrading.Domain.Models;
 
 public class Candlestick : IQuote, ICloneable
 {
-    public CurrencyPair CurrencyPair { get; set; } = default!;
+    public required CurrencyPair CurrencyPair { get; init; } = default!;
 
-    public DateTime Date { get; set; }
-    public decimal Open { get; set; }
-    public decimal High { get; set; }
-    public decimal Low { get; set; }
-    public decimal Close { get; set; }
-    public decimal Volume { get; set; }
+    public required DateTime Date { get; init; }
+    public required decimal Open { get; init; }
+    public required decimal High { get; init; }
+    public required decimal Low { get; init; }
+    public required decimal Close { get; init; }
+    public required decimal Volume { get; init; }
     
 
     // Directional information
-    public bool IsBullish => Close > Open;
-    public bool IsBearish => Close < Open;
-    public bool IsDoji => Close == Open;
+    public bool IsBullish => this.Close > this.Open;
+    public bool IsBearish => this.Close < this.Open;
+    public bool IsDoji => this.Close == this.Open;
 
     public object Clone()
     {

@@ -160,6 +160,7 @@ public partial class AutomaticTradingDotNetForm : Form
                         High = decimal.Parse(data_window_lines[3], CultureInfo.InvariantCulture),
                         Low = decimal.Parse(data_window_lines[4], CultureInfo.InvariantCulture),
                         Close = decimal.Parse(data_window_lines[5], CultureInfo.InvariantCulture),
+                        Volume = 0, // irrelevant for the strategy -- TO DO
 
                         Buy = decimal.Parse(data_window_lines[6], CultureInfo.InvariantCulture) == decimal.One,
                         StrongBuy = decimal.Parse(data_window_lines[7], CultureInfo.InvariantCulture) == decimal.One,

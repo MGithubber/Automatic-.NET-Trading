@@ -26,15 +26,18 @@ public class CandlestickTests
             Open = random.Next(800, 1200) + (decimal)Math.Round(random.NextDouble(), 4),
             High = random.Next(800, 1200) + (decimal)Math.Round(random.NextDouble(), 4),
             Low = random.Next(800, 1200) + (decimal)Math.Round(random.NextDouble(), 4),
-            Close = random.Next(800, 1200) + (decimal)Math.Round(random.NextDouble(), 4)
+            Close = random.Next(800, 1200) + (decimal)Math.Round(random.NextDouble(), 4),
+            Volume = 0 
         }).ToArray();
         this.Candlesticks = this.Quotes.Select(quote => new Candlestick
         {
+            CurrencyPair = new CurrencyPair("ETH", "BUSD"),
             Date = quote.Date,
             Open = quote.Open,
             High = quote.High,
             Low = quote.Low,
-            Close = quote.Close
+            Close = quote.Close,
+            Volume = quote.Volume
         });
 
         // Act
@@ -55,11 +58,13 @@ public class CandlestickTests
         this.Quotes = csv.GetRecords<Quote>().ToArray();
         this.Candlesticks = this.Quotes.Select(quote => new Candlestick
         {
+            CurrencyPair = new CurrencyPair("ETH", "BUSD"),
             Date = quote.Date,
             Open = quote.Open,
             High = quote.High,
             Low = quote.Low,
-            Close = quote.Close
+            Close = quote.Close,
+            Volume = quote.Volume
         });
         
         // Act
